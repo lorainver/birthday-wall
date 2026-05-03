@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>扫码送祝福</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .container {
+      text-align: center;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      to { background-position: 200% center; }
+    }
+
+    .subtitle {
+      font-size: 1.3rem;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 40px;
+    }
+
+    .qr-box {
+      background: #fff;
+      border-radius: 24px;
+      padding: 30px;
+      display: inline-block;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .qr-box img {
+      width: 300px;
+      height: 300px;
+      display: block;
+    }
+
+    .qr-url {
+      margin-top: 24px;
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.6);
+      word-break: break-all;
+    }
+
+    .hint {
+      margin-top: 16px;
+      font-size: 1rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .loading {
+      font-size: 1.2rem;
+      color: rgba(255,255,255,0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎂 生日祝福墙</h1>
+    <p class="subtitle">打开手机扫一扫，送出你的祝福</p>
+    <div class="qr-box">
+      <img id="qrImg" src="" alt="二维码加载中...">
+    </div>
+    <p class="qr-url" id="qrUrl"></p>
+    <p class="hint">💡 手机扫描二维码即可发送祝福</p>
+  </div>
+
+  <script>
+    async function loadQR() {
+      try {
+        const res = await fetch('/api/qrcode');
+        const data = await res.json();
+        document.getElementById('qrImg').src = data.qr;
+        document.getElementById('qrUrl').textContent = data.url;
+      } catch (e) {
+        document.getElementById('qrImg').alt = '加载失败，请刷新重试';
+      }
+    }
+    loadQR();
+  </script>
+</body>
+</html>

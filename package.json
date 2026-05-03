@@ -1,0 +1,14 @@
+{
+  "name": "birthday-blessing-wall",
+  "version": "1.0.0",
+  "description": "生日祝福墙 - 扫码发送祝福，大屏实时展示弹幕",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "ws": "^8.18.0",
+    "qrcode": "^1.5.4"
+  }
+}

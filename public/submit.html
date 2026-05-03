@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>送出生日祝福</title>
+  <link rel="stylesheet" href="submit.css">
+</head>
+<body>
+  <div class="container">
+    <!-- 装饰粒子 -->
+    <div class="particles" id="particles"></div>
+
+    <div class="card">
+      <h1 class="logo">🎂</h1>
+      <h2 class="heading">送出生日祝福</h2>
+      <p class="desc">写下你对寿星的美好祝愿吧~</p>
+
+      <form id="form" autocomplete="off">
+        <div class="field">
+          <label for="name">你的昵称</label>
+          <input type="text" id="name" placeholder="输入你的名字" maxlength="20">
+        </div>
+
+        <div class="field">
+          <label>祝福模板 <span class="label-hint">(点击快速填写)</span></label>
+          <div class="templates" id="templates">
+            <button type="button" class="tpl-btn">生日快乐🎂</button>
+            <button type="button" class="tpl-btn">万事如意🎉</button>
+            <button type="button" class="tpl-btn">身体健康💪</button>
+            <button type="button" class="tpl-btn">心想事成✨</button>
+            <button type="button" class="tpl-btn">前程似锦🌟</button>
+            <button type="button" class="tpl-btn">天天开心😄</button>
+            <button type="button" class="tpl-btn">越来越好💖</button>
+            <button type="button" class="tpl-btn">永远年轻🌸</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="message">祝福语</label>
+          <textarea id="message" placeholder="写下你的祝福..." rows="4" maxlength="200" required></textarea>
+          <span class="char-count"><span id="count">0</span>/200</span>
+        </div>
+
+        <div class="field">
+          <label>选个表情 <span class="label-hint">(可选)</span></label>
+          <div class="emoji-picker" id="emojiPicker">
+            <div class="emoji-option selected" data-emoji="">无</div>
+            <div class="emoji-option" data-emoji="🎂">🎂</div>
+            <div class="emoji-option" data-emoji="🎉">🎉</div>
+            <div class="emoji-option" data-emoji="🎈">🎈</div>
+            <div class="emoji-option" data-emoji="🎁">🎁</div>
+            <div class="emoji-option" data-emoji="💖">💖</div>
+            <div class="emoji-option" data-emoji="🌹">🌹</div>
+            <div class="emoji-option" data-emoji="🥂">🥂</div>
+            <div class="emoji-option" data-emoji="🍰">🍰</div>
+            <div class="emoji-option" data-emoji="⭐">⭐</div>
+            <div class="emoji-option" data-emoji="🌟">🌟</div>
+            <div class="emoji-option" data-emoji="💕">💕</div>
+            <div class="emoji-option" data-emoji="🎊">🎊</div>
+            <div class="emoji-option" data-emoji="🥳">🥳</div>
+            <div class="emoji-option" data-emoji="💐">💐</div>
+            <div class="emoji-option" data-emoji="🎀">🎀</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>弹幕颜色</label>
+          <div class="color-picker" id="colorPicker">
+            <div class="color-option selected" data-color="#ffffff" style="background:#ffffff"></div>
+            <div class="color-option" data-color="#ff6b6b" style="background:#ff6b6b"></div>
+            <div class="color-option" data-color="#ffd93d" style="background:#ffd93d"></div>
+            <div class="color-option" data-color="#6bcb77" style="background:#6bcb77"></div>
+            <div class="color-option" data-color="#4d96ff" style="background:#4d96ff"></div>
+            <div class="color-option" data-color="#ff9a9e" style="background:#ff9a9e"></div>
+            <div class="color-option" data-color="#a18cd1" style="background:#a18cd1"></div>
+            <div class="color-option" data-color="#fbc2eb" style="background:#fbc2eb"></div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <span class="btn-text">送出祝福 🎉</span>
+          <span class="btn-loading" style="display:none">发送中...</span>
+        </button>
+      </form>
+
+      <!-- 成功提示 -->
+      <div class="success-overlay" id="successOverlay">
+        <div class="success-content">
+          <div class="success-icon">🎉</div>
+          <h3>祝福已送出!</h3>
+          <p>你的祝福将在大屏上飘过~</p>
+          <p class="redirect-hint" id="redirectHint"><span id="countdown">3</span> 秒后跳转到弹幕墙...</p>
+          <div class="success-btns">
+            <button class="btn-view" id="btnView">查看弹幕墙</button>
+            <button class="btn-again" id="btnAgain">再送一条</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 弹幕墙入口 -->
+    <div class="display-link" id="displayLink">
+      <img id="qrImg" src="" alt="弹幕墙二维码">
+      <div class="display-link-text">
+        <span class="display-link-label">📺 查看弹幕墙</span>
+        <span class="display-link-url" id="displayUrl"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const messageInput = document.getElementById('message');
+    const countSpan = document.getElementById('count');
+    const colorPicker = document.getElementById('colorPicker');
+    const emojiPicker = document.getElementById('emojiPicker');
+    const templates = document.getElementById('templates');
+    const submitBtn = document.getElementById('submitBtn');
+    const successOverlay = document.getElementById('successOverlay');
+    const btnAgain = document.getElementById('btnAgain');
+    const btnView = document.getElementById('btnView');
+    const countdownEl = document.getElementById('countdown');
+    const redirectHint = document.getElementById('redirectHint');
+
+    let selectedColor = '#ffffff';
+    let selectedEmoji = '';
+
+    // 字数统计
+    messageInput.addEventListener('input', () => {
+      countSpan.textContent = messageInput.value.length;
+    });
+
+    // 祝福模板
+    templates.addEventListener('click', (e) => {
+      const btn = e.target.closest('.tpl-btn');
+      if (!btn) return;
+      messageInput.value = btn.textContent;
+      countSpan.textContent = messageInput.value.length;
+      messageInput.focus();
+    });
+
+    // 表情选择
+    emojiPicker.addEventListener('click', (e) => {
+      const opt = e.target.closest('.emoji-option');
+      if (!opt) return;
+      emojiPicker.querySelectorAll('.emoji-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      selectedEmoji = opt.dataset.emoji;
+    });
+
+    // 颜色选择
+    colorPicker.addEventListener('click', (e) => {
+      const opt = e.target.closest('.color-option');
+      if (!opt) return;
+      colorPicker.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      selectedColor = opt.dataset.color;
+    });
+
+    // 提交
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      submitBtn.querySelector('.btn-text').style.display = 'none';
+      submitBtn.querySelector('.btn-loading').style.display = 'inline';
+      submitBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/blessing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, message, color: selectedColor, emoji: selectedEmoji }),
+        });
+        if (res.ok) {
+          successOverlay.classList.add('show');
+          startCountdown();
+        } else {
+          alert('发送失败，请重试');
+        }
+      } catch (err) {
+        alert('网络错误，请重试');
+      } finally {
+        submitBtn.querySelector('.btn-text').style.display = 'inline';
+        submitBtn.querySelector('.btn-loading').style.display = 'none';
+        submitBtn.disabled = false;
+      }
+    });
+
+    // 再送一条
+    let redirectTimer = null;
+    btnAgain.addEventListener('click', () => {
+      cancelRedirect();
+      successOverlay.classList.remove('show');
+      messageInput.value = '';
+      countSpan.textContent = '0';
+      selectedEmoji = '';
+      emojiPicker.querySelectorAll('.emoji-option').forEach(o => o.classList.remove('selected'));
+      emojiPicker.querySelector('.emoji-option').classList.add('selected');
+      messageInput.focus();
+    });
+
+    // 查看弹幕墙
+    btnView.addEventListener('click', () => {
+      cancelRedirect();
+      window.location.href = '/';
+    });
+
+    // 自动跳转倒计时
+    function startCountdown() {
+      let sec = 3;
+      countdownEl.textContent = sec;
+      redirectHint.style.display = 'block';
+      redirectTimer = setInterval(() => {
+        sec--;
+        countdownEl.textContent = sec;
+        if (sec <= 0) {
+          clearInterval(redirectTimer);
+          window.location.href = '/';
+        }
+      }, 1000);
+    }
+
+    function cancelRedirect() {
+      if (redirectTimer) {
+        clearInterval(redirectTimer);
+        redirectTimer = null;
+      }
+    }
+
+    // 加载弹幕墙二维码
+    async function loadDisplayQR() {
+      try {
+        const displayUrl = location.origin;
+        document.getElementById('displayUrl').textContent = displayUrl;
+        const res = await fetch('/api/qrcode?type=display');
+        const data = await res.json();
+        document.getElementById('qrImg').src = data.qr;
+        // 点击跳转弹幕墙
+        document.getElementById('displayLink').addEventListener('click', () => {
+          window.location.href = '/';
+        });
+      } catch (e) {
+        console.error('加载二维码失败:', e);
+      }
+    }
+    loadDisplayQR();
+
+    // 装饰粒子
+    function createParticles() {
+      const container = document.getElementById('particles');
+      const emojis = ['🎈', '🎁', '🎂', '⭐', '🌟', '💖', '✨', '🎀'];
+      for (let i = 0; i < 15; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDelay = Math.random() * 10 + 's';
+        p.style.animationDuration = (8 + Math.random() * 12) + 's';
+        p.style.fontSize = (16 + Math.random() * 20) + 'px';
+        container.appendChild(p);
+      }
+    }
+    createParticles();
+  </script>
+</body>
+</html>

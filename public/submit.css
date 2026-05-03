@@ -1,0 +1,401 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  position: relative;
+  padding: 20px 0;
+}
+
+/* ========== 粒子装饰 ========== */
+.particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  bottom: -40px;
+  animation: float-up linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* ========== 卡片 ========== */
+.container {
+  width: 100%;
+  max-width: 440px;
+  padding: 20px;
+  z-index: 1;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 36px 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.logo {
+  text-align: center;
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.heading {
+  text-align: center;
+  font-size: 1.6rem;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.desc {
+  text-align: center;
+  color: #888;
+  font-size: 0.9rem;
+  margin-bottom: 28px;
+}
+
+/* ========== 表单 ========== */
+.field {
+  margin-bottom: 20px;
+}
+
+.field label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.3s;
+  outline: none;
+  background: #fafafa;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: #764ba2;
+  background: #fff;
+}
+
+.field textarea {
+  resize: none;
+}
+
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+/* ========== 标签提示 ========== */
+.label-hint {
+  font-weight: 400;
+  color: #aaa;
+  font-size: 0.8rem;
+}
+
+/* ========== 祝福模板 ========== */
+.templates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tpl-btn {
+  padding: 8px 14px;
+  border: 2px solid #e8e8e8;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 0.85rem;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.tpl-btn:hover {
+  border-color: #764ba2;
+  color: #764ba2;
+  background: #f8f0ff;
+}
+
+.tpl-btn:active {
+  transform: scale(0.95);
+}
+
+/* ========== 表情选择器 ========== */
+.emoji-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.emoji-option {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f5f5f5;
+}
+
+.emoji-option:first-child {
+  font-size: 0.75rem;
+  color: #999;
+  width: auto;
+  padding: 0 12px;
+}
+
+.emoji-option:hover {
+  background: #f0e6ff;
+  border-color: #d4b8ff;
+}
+
+.emoji-option.selected {
+  border-color: #764ba2;
+  background: #f0e6ff;
+  transform: scale(1.1);
+}
+
+/* ========== 颜色选择器 ========== */
+.color-picker {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.color-option:hover {
+  transform: scale(1.15);
+}
+
+.color-option.selected {
+  border-color: #764ba2;
+  transform: scale(1.15);
+}
+
+/* ========== 提交按钮 ========== */
+.btn-submit {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 8px;
+}
+
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(118, 75, 162, 0.4);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+.btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ========== 成功遮罩 ========== */
+.success-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.97);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+  border-radius: 24px;
+  z-index: 10;
+}
+
+.success-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.success-content {
+  text-align: center;
+  animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: 12px;
+}
+
+.success-content h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.success-content p {
+  color: #888;
+  margin-bottom: 16px;
+}
+
+.redirect-hint {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-bottom: 20px;
+}
+
+.redirect-hint span {
+  font-weight: 700;
+  color: #764ba2;
+}
+
+.success-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-view {
+  padding: 12px 32px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-view:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+}
+
+.btn-again {
+  padding: 12px 32px;
+  border: 2px solid #764ba2;
+  border-radius: 12px;
+  background: transparent;
+  color: #764ba2;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+}
+
+.btn-again:hover {
+  background: #764ba2;
+  color: #fff;
+}
+
+/* ========== 弹幕墙入口 ========== */
+.display-link {
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s;
+  text-decoration: none;
+}
+
+.display-link:hover {
+  transform: translateY(-2px);
+}
+
+.display-link img {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.display-link-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.display-link-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.display-link-url {
+  font-size: 0.75rem;
+  color: #999;
+  word-break: break-all;
+}

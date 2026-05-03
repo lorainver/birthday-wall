@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎂 生日祝福墙</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 背景层 -->
+  <div id="bg-layer"></div>
+
+  <!-- 标题区 -->
+  <header id="header">
+    <h1 id="title">🎂 生日快乐 🎂</h1>
+    <p id="subtitle">扫码送出你的祝福</p>
+    <div id="counter">
+      <span class="counter-icon">💌</span>
+      <span class="counter-text">已收到 <span id="count">0</span> 条祝福</span>
+    </div>
+  </header>
+
+  <!-- 弹幕层 -->
+  <div id="danmaku-layer"></div>
+
+  <!-- 二维码浮窗 -->
+  <div id="qr-float" title="点击查看大图">
+    <img id="qr-img" src="" alt="扫码送祝福">
+    <span>扫码送祝福</span>
+  </div>
+
+  <script>
+    // ========== 配置 ==========
+    const CONFIG = {
+      title: '🎂 生日快乐 🎂',        // 修改标题
+      subtitle: '扫码送出你的祝福',       // 修改副标题
+      bgImage: '/assets/birthday.png',     // 背景图片 URL，留空用渐变
+      maxDanmaku: 30,                     // 屏幕最大弹幕数
+      danmakuSpeed: { min: 8, max: 15 },  // 弹幕飘过秒数
+      danmakuFontSize: { min: 22, max: 40 }, // 弹幕字号
+      loopInterval: 3000,                 // 循环间隔(毫秒)，每隔多久从已有祝福中随机弹一条
+    };
+
+    // ========== 初始化 ==========
+    document.getElementById('title').textContent = CONFIG.title;
+    document.getElementById('subtitle').textContent = CONFIG.subtitle;
+    if (CONFIG.bgImage) {
+      document.getElementById('bg-layer').style.backgroundImage = `url(${CONFIG.bgImage})`;
+    }
+
+    // ========== WebSocket ==========
+    let ws;
+    function connectWS() {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${location.host}`);
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'new_blessing') {
+          blessingCount++;
+          updateCounter();
+          blessingPool.push(msg.data);
+          addDanmaku(msg.data);
+        }
+      };
+      ws.onclose = () => setTimeout(connectWS, 2000);
+    }
+    connectWS();
+
+    // ========== 计数器 ==========
+    let blessingCount = 0;
+    const countEl = document.getElementById('count');
+
+    function updateCounter() {
+      countEl.textContent = blessingCount;
+      countEl.parentElement.parentElement.classList.add('counter-bump');
+      setTimeout(() => countEl.parentElement.parentElement.classList.remove('counter-bump'), 400);
+    }
+
+    // ========== 弹幕 ==========
+    const danmakuLayer = document.getElementById('danmaku-layer');
+    let danmakuCount = 0;
+    const blessingPool = []; // 所有祝福池，用于循环播放
+
+    function addDanmaku(b) {
+      if (danmakuCount >= CONFIG.maxDanmaku) return;
+      danmakuCount++;
+
+      const el = document.createElement('div');
+      el.className = 'danmaku-item';
+      const emojiPrefix = b.emoji ? b.emoji + ' ' : '';
+      el.textContent = `${emojiPrefix}${b.name}: ${b.message}`;
+
+      const fontSize = randInt(CONFIG.danmakuFontSize.min, CONFIG.danmakuFontSize.max);
+      const duration = randInt(CONFIG.danmakuSpeed.min, CONFIG.danmakuSpeed.max);
+      const top = randInt(60, window.innerHeight - 80);
+
+      el.style.cssText = `
+        font-size: ${fontSize}px;
+        color: ${b.color || '#fff'};
+        top: ${top}px;
+        animation-duration: ${duration}s;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+      `;
+
+      danmakuLayer.appendChild(el);
+      el.addEventListener('animationend', () => {
+        el.remove();
+        danmakuCount--;
+      });
+    }
+
+    // 循环播放：从池中随机取一条弹幕
+    function startLoop() {
+      setInterval(() => {
+        if (blessingPool.length === 0) return;
+        const b = blessingPool[Math.floor(Math.random() * blessingPool.length)];
+        addDanmaku(b);
+      }, CONFIG.loopInterval);
+    }
+
+    // ========== 加载历史祝福 ==========
+    async function loadBlessings() {
+      try {
+        const res = await fetch('/api/blessings');
+        const data = await res.json();
+        blessingCount = data.length;
+        updateCounter();
+        data.forEach(b => {
+          blessingPool.push(b);
+          addDanmaku(b);
+        });
+        startLoop();
+      } catch (e) {
+        console.error('加载祝福失败:', e);
+      }
+    }
+
+    // ========== 加载二维码 ==========
+    async function loadQRCode() {
+      try {
+        const res = await fetch('/api/qrcode');
+        const data = await res.json();
+        document.getElementById('qr-img').src = data.qr;
+      } catch (e) {
+        console.error('加载二维码失败:', e);
+      }
+    }
+
+    // ========== 工具函数 ==========
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    function formatTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    // ========== 启动 ==========
+    loadBlessings();
+    loadQRCode();
+  </script>
+</body>
+</html>
