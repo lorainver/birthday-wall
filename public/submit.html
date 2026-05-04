@@ -1049,8 +1049,8 @@
       mbtiCurrentQ = 0;
       mbtiQuestionArea.style.display = '';
       mbtiResult.style.display = 'none';
-      document.getElementById('mbtiModalTitle').textContent = '快速 MBTI 测试';
-      document.getElementById('mbtiModalSubtitle').textContent = '10 道题，1 分钟搞定';
+      document.getElementById('mbtiModalTitle').textContent = title;
+      document.getElementById('mbtiModalSubtitle').textContent = subtitle;
       // 生成进度点
       mbtiProgress.innerHTML = mbtiQuestions.map((_, i) =>
         `<div class="mbti-progress-dot${i === 0 ? ' active' : ''}" id="mbtiDot${i}"></div>`
