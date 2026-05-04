@@ -17,6 +17,60 @@
     }
     #fireworkCanvas.show { display: block; }
 
+    /* MBTI 样式 */
+    .mbti-field { margin-bottom: 20px; }
+    .mbti-field label { display: block; margin-bottom: 8px; font-size: 14px; color: #666; }
+    .mbti-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .mbti-select {
+      flex: 1; min-width: 120px; padding: 10px 14px;
+      border: 2px solid #e8e8e8; border-radius: 10px;
+      font-size: 15px; background: #fafafa; cursor: pointer;
+      transition: border-color 0.3s;
+    }
+    .mbti-select:focus { border-color: #764ba2; outline: none; background: #fff; }
+    .btn-mbti-test {
+      padding: 10px 18px; border: 2px solid #764ba2; border-radius: 10px;
+      background: transparent; color: #764ba2; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-mbti-test:hover { background: #764ba2; color: #fff; }
+    /* MBTI 测试弹窗 */
+    .mbti-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 200; padding: 20px;
+    }
+    .mbti-modal.show { display: flex; }
+    .mbti-modal-content {
+      background: #fff; border-radius: 20px; padding: 28px;
+      max-width: 420px; width: 100%; max-height: 80vh; overflow-y: auto;
+      animation: pop-in 0.3s ease;
+    }
+    .mbti-modal h3 { font-size: 1.3rem; color: #333; margin-bottom: 6px; text-align: center; }
+    .mbti-modal .subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 20px; }
+    .mbti-progress { display: flex; gap: 4px; margin-bottom: 20px; justify-content: center; }
+    .mbti-progress-dot { width: 10px; height: 10px; border-radius: 50%; background: #e0e0e0; transition: all 0.3s; }
+    .mbti-progress-dot.active { background: #764ba2; transform: scale(1.2); }
+    .mbti-progress-dot.done { background: #6bcb77; }
+    .mbti-question { font-size: 1.1rem; color: #444; margin-bottom: 18px; text-align: center; line-height: 1.6; }
+    .mbti-options { display: flex; flex-direction: column; gap: 10px; }
+    .mbti-option {
+      padding: 14px 18px; border: 2px solid #e8e8e8; border-radius: 12px;
+      background: #fafafa; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; text-align: left;
+    }
+    .mbti-option:hover { border-color: #764ba2; background: #f8f0ff; }
+    .mbti-option.selected { border-color: #764ba2; background: #f0e6ff; }
+    .mbti-result { text-align: center; }
+    .mbti-result-type { font-size: 3rem; font-weight: 700; margin: 10px 0; }
+    .mbti-result-type.ENFP, .mbti-result-type.ENFJ, .mbti-result-type.INFP, .mbti-result-type.INFJ { color: #27ae60; }
+    .mbti-result-type.INTJ, .mbti-result-type.INTP, .mbti-result-type.ENTJ, .mbti-result-type.ENTP { color: #9b59b6; }
+    .mbti-result-type.ISTJ, .mbti-result-type.ISFJ, .mbti-result-type.ESTJ, .mbti-result-type.ESFJ { color: #3498db; }
+    .mbti-result-type.ISTP, .mbti-result-type.ISFP, .mbti-result-type.ESTP, .mbti-result-type.ESFP { color: #f39c12; }
+    .mbti-result-name { font-size: 1.1rem; color: #555; margin-bottom: 10px; }
+    .mbti-result-desc { font-size: 0.9rem; color: #666; line-height: 1.6; margin-bottom: 20px; }
+    .btn-mbti-confirm { width: 100%; padding: 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    .btn-mbti-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border: none; background: #f0f0f0; border-radius: 50%; cursor: pointer; font-size: 18px; }
+
     /* 录音按钮样式 */
     .record-field { margin-bottom: 20px; }
     .record-field label { display: block; margin-bottom: 8px; font-size: 14px; color: #666; }
@@ -160,6 +214,41 @@
           </div>
         </div>
 
+        <!-- MBTI 性格类型 -->
+        <div class="mbti-field">
+          <label>你的 MBTI 性格 <span class="label-hint">可选，增加趣味</span></label>
+          <div class="mbti-row">
+            <select class="mbti-select" id="mbtiSelect">
+              <option value="">未选择</option>
+              <optgroup label="分析家(NT)">
+                <option value="INTJ">INTJ - 建筑师</option>
+                <option value="INTP">INTP - 逻辑学家</option>
+                <option value="ENTJ">ENTJ - 指挥官</option>
+                <option value="ENTP">ENTP - 辩论家</option>
+              </optgroup>
+              <optgroup label="外交家(NF)">
+                <option value="INFJ">INFJ - 提倡者</option>
+                <option value="INFP">INFP - 调停者</option>
+                <option value="ENFJ">ENFJ - 主人公</option>
+                <option value="ENFP">ENFP - 竞选者</option>
+              </optgroup>
+              <optgroup label="守护者(SJ)">
+                <option value="ISTJ">ISTJ - 物流师</option>
+                <option value="ISFJ">ISFJ - 守卫者</option>
+                <option value="ESTJ">ESTJ - 总经理</option>
+                <option value="ESFJ">ESFJ - 执行者</option>
+              </optgroup>
+              <optgroup label="探索者(SP)">
+                <option value="ISTP">ISTP - 鉴赏家</option>
+                <option value="ISFP">ISFP - 探险家</option>
+                <option value="ESTP">ESTP - 企业家</option>
+                <option value="ESFP">ESFP - 表演者</option>
+              </optgroup>
+            </select>
+            <button class="btn-mbti-test" id="btnMbtiTest">快速测试</button>
+          </div>
+        </div>
+
         <button type="submit" class="btn-submit" id="submitBtn">
           <span class="btn-text">送出祝福 🎉</span>
           <span class="btn-loading" style="display:none">发送中...</span>
@@ -181,7 +270,27 @@
       </div>
     </div>
 
-    <!-- 弹幕墙入口 -->
+    <!-- MBTI 测试弹窗 -->
+  <div class="mbti-modal" id="mbtiModal">
+    <div class="mbti-modal-content" style="position:relative">
+      <button class="btn-mbti-close" id="btnMbtiClose">&times;</button>
+      <h3 id="mbtiModalTitle">快速 MBTI 测试</h3>
+      <p class="subtitle" id="mbtiModalSubtitle">10 道题，1 分钟搞定</p>
+      <div class="mbti-progress" id="mbtiProgress"></div>
+      <div id="mbtiQuestionArea">
+        <div class="mbti-question" id="mbtiQuestion"></div>
+        <div class="mbti-options" id="mbtiOptions"></div>
+      </div>
+      <div class="mbti-result" id="mbtiResult" style="display:none">
+        <div class="mbti-result-type" id="mbtiResultType"></div>
+        <div class="mbti-result-name" id="mbtiResultName"></div>
+        <div class="mbti-result-desc" id="mbtiResultDesc"></div>
+        <button class="btn-mbti-confirm" id="btnMbtiConfirm">确认选择</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹幕墙入口 -->
     <div class="display-link" id="displayLink">
       <img id="qrImg" src="" alt="弹幕墙二维码">
       <div class="display-link-text">
@@ -207,6 +316,7 @@
 
     let selectedColor = '#ffffff';
     let selectedEmoji = '';
+    let selectedMbti = '';
 
     // ========== 录音功能 ==========
     const btnRecord = document.getElementById('btnRecord');
@@ -413,6 +523,7 @@
           fd.append('message', message);
           fd.append('color', selectedColor);
           fd.append('emoji', selectedEmoji);
+          fd.append('mbti_type', selectedMbti);
           const audioFile = uploadedAudioFile || audioBlob;
           const audioName = uploadedAudioFile ? uploadedAudioFile.name : 'voice.webm';
           fd.append('audio', audioFile, audioName);
@@ -425,7 +536,7 @@
           res = await fetch('/api/blessing', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, message, color: selectedColor, emoji: selectedEmoji }),
+            body: JSON.stringify({ name, message, color: selectedColor, emoji: selectedEmoji, mbti_type: selectedMbti }),
           });
         }
         if (res.ok) {
@@ -452,6 +563,8 @@
       messageInput.value = '';
       countSpan.textContent = '0';
       selectedEmoji = '';
+      selectedMbti = '';
+      document.getElementById('mbtiSelect').value = '';
       deleteRecording();
       emojiPicker.querySelectorAll('.emoji-option').forEach(o => o.classList.remove('selected'));
       emojiPicker.querySelector('.emoji-option').classList.add('selected');
@@ -702,6 +815,162 @@
     // 响应窗口大小变化
     window.addEventListener('resize', () => {
       if (fwCanvas.classList.contains('show')) resizeFireworkCanvas();
+    });
+
+    // ========== MBTI 快速测试 ==========
+    const mbtiModal = document.getElementById('mbtiModal');
+    const mbtiSelect = document.getElementById('mbtiSelect');
+    const btnMbtiTest = document.getElementById('btnMbtiTest');
+    const btnMbtiClose = document.getElementById('btnMbtiClose');
+    const mbtiProgress = document.getElementById('mbtiProgress');
+    const mbtiQuestion = document.getElementById('mbtiQuestion');
+    const mbtiOptions = document.getElementById('mbtiOptions');
+    const mbtiResult = document.getElementById('mbtiResult');
+    const mbtiQuestionArea = document.getElementById('mbtiQuestionArea');
+    const mbtiResultType = document.getElementById('mbtiResultType');
+    const mbtiResultName = document.getElementById('mbtiResultName');
+    const mbtiResultDesc = document.getElementById('mbtiResultDesc');
+    const btnMbtiConfirm = document.getElementById('btnMbtiConfirm');
+
+    const MBTI_QUESTIONS = [
+      // E/I 维度
+      { q: '周末到了，你更想？', a: '参加热闹的聚会', b: '宅在家享受独处', dim: 'EI' },
+      { q: '和朋友聊天后，你通常？', a: '感觉能量满满', b: '需要独处恢复精力', dim: 'EI' },
+      { q: '遇到新朋友时，你？', a: '主动搭话聊天', b: '等对方先开口', dim: 'EI' },
+      // S/N 维度
+      { q: '你更关注？', a: '眼前的事实和细节', b: '未来的可能和想象', dim: 'SN' },
+      { q: '学习新东西时，你偏好？', a: '循序渐进，从实际例子开始', b: '先看全貌，自己摸索规律', dim: 'SN' },
+      { q: '评价一个方案，你更看重？', a: '是否切实可行', b: '是否新颖独特', dim: 'SN' },
+      // T/F 维度
+      { q: '朋友向你诉苦，你会？', a: '帮Ta分析问题找方案', b: '先共情安慰，让Ta感觉被理解', dim: 'TF' },
+      { q: '做重要决定时，你更依赖？', a: '逻辑分析和客观数据', b: '内心感受和价值观', dim: 'TF' },
+      // J/P 维度
+      { q: '你的旅行方式？', a: '提前做好详细攻略', b: '随性而走，走到哪算哪', dim: 'JP' },
+      { q: '对待截止日期？', a: '提前完成，绝不拖延', b: 'DDL 前爆发超强战力', dim: 'JP' },
+    ];
+
+    const MBTI_DATA = {
+      INTJ: { name: '建筑师', desc: '富有想象力的战略家，一切皆在计划中。独立果断，对知识有强烈的渴望。', color: '#9b59b6' },
+      INTP: { name: '逻辑学家', desc: '不知疲倦的思考者，对知识和理论有无穷的好奇心。追求逻辑自洽，喜欢探索抽象概念。', color: '#9b59b6' },
+      ENTJ: { name: '指挥官', desc: '大胆果断的天生领袖，善于制定长远计划并推动团队执行。气场强大，目标明确。', color: '#9b59b6' },
+      ENTP: { name: '辩论家', desc: '聪明好奇的思想实验者，热爱智力挑战和头脑风暴。思维敏捷，喜欢打破常规。', color: '#9b59b6' },
+      INFJ: { name: '提侣者', desc: '安静而神秘的理想主义者，洞察力强，总是思考如何让世界更美好。', color: '#27ae60' },
+      INFP: { name: '调停者', desc: '诗意善良的利他主义者，内心丰富且充满理想。对世界有独特的理解和深沉的共情。', color: '#27ae60' },
+      ENFJ: { name: '主人公', desc: '富有魅力的激励者，天生的影响力让周围人愿意追随。善于鼓舞人心，推动改变。', color: '#27ae60' },
+      ENFP: { name: '竞选者', desc: '热情洋溢的自由精灵，永远充满创意和可能性。好奇心旺盛，感染力十足。', color: '#27ae60' },
+      ISTJ: { name: '物流师', desc: '务实可靠的秩序守护者，一丝不苟地履行职责。重视传统，值得信赖。', color: '#3498db' },
+      ISFJ: { name: '守卫者', desc: '温暖体贴的保护者，默默守护身边的人。细心周到，是团队中不可或缺的支柱。', color: '#3498db' },
+      ESTJ: { name: '总经理', desc: '高效务实的组织者，善于建立秩序和制度。做事有计划，执行力超强。', color: '#3498db' },
+      ESFJ: { name: '执行者', desc: '热心肠的社交家，总是把别人的需求放在心上。善于营造温馨和谐的团队氛围。', color: '#3498db' },
+      ISTP: { name: '鉴赏家', desc: '大胆实际的实验家，喜欢动手探索世界。冷静理性，擅长在紧急时刻解决问题。', color: '#f39c12' },
+      ISFP: { name: '探险家', desc: '灵活随性的艺术家，用行动和美感诠释世界。内心丰富但低调，活在当下。', color: '#f39c12' },
+      ESTP: { name: '企业家', desc: '活力满满的机会主义者，享受冒险和即兴发挥。反应极快，永远走在最前沿。', color: '#f39c12' },
+      ESFP: { name: '表演者', desc: '自发的娱乐家，天生自带光环。热情洋溢，走到哪里都是派对的中心。', color: '#f39c12' },
+    };
+
+    let mbtiAnswers = {};
+    let mbtiCurrentQ = 0;
+
+    // 打开测试弹窗
+    btnMbtiTest.addEventListener('click', () => {
+      mbtiAnswers = {};
+      mbtiCurrentQ = 0;
+      mbtiQuestionArea.style.display = '';
+      mbtiResult.style.display = 'none';
+      document.getElementById('mbtiModalTitle').textContent = '快速 MBTI 测试';
+      document.getElementById('mbtiModalSubtitle').textContent = '10 道题，1 分钟搞定';
+      // 生成进度点
+      mbtiProgress.innerHTML = MBTI_QUESTIONS.map((_, i) =>
+        `<div class="mbti-progress-dot${i === 0 ? ' active' : ''}" id="mbtiDot${i}"></div>`
+      ).join('');
+      renderQuestion(0);
+      mbtiModal.classList.add('show');
+    });
+
+    // 关闭弹窗
+    btnMbtiClose.addEventListener('click', () => mbtiModal.classList.remove('show'));
+    mbtiModal.addEventListener('click', (e) => {
+      if (e.target === mbtiModal) mbtiModal.classList.remove('show');
+    });
+
+    function renderQuestion(idx) {
+      const q = MBTI_QUESTIONS[idx];
+      mbtiQuestion.textContent = `${idx + 1}. ${q.q}`;
+      mbtiOptions.innerHTML = `
+        <div class="mbti-option" data-val="A">A. ${q.a}</div>
+        <div class="mbti-option" data-val="B">B. ${q.b}</div>
+      `;
+      // 高亮已选
+      if (mbtiAnswers[q.dim + idx]) {
+        mbtiOptions.querySelectorAll('.mbti-option').forEach(o => {
+          if (o.dataset.val === mbtiAnswers[q.dim + idx]) o.classList.add('selected');
+        });
+      }
+      mbtiOptions.querySelectorAll('.mbti-option').forEach(o => {
+        o.addEventListener('click', () => selectAnswer(idx, o.dataset.val));
+      });
+    }
+
+    function selectAnswer(idx, val) {
+      const q = MBTI_QUESTIONS[idx];
+      mbtiAnswers[q.dim + idx] = val;
+      // 更新进度点
+      const dot = document.getElementById('mbtiDot' + idx);
+      dot.classList.remove('active');
+      dot.classList.add('done');
+      // 下一题或出结果
+      if (idx < MBTI_QUESTIONS.length - 1) {
+        const nextDot = document.getElementById('mbtiDot' + (idx + 1));
+        nextDot.classList.add('active');
+        mbtiCurrentQ = idx + 1;
+        setTimeout(() => renderQuestion(idx + 1), 300);
+      } else {
+        setTimeout(showMbtiResult, 400);
+      }
+    }
+
+    function showMbtiResult() {
+      // 计算各维度
+      let scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+      MBTI_QUESTIONS.forEach((q, i) => {
+        const ans = mbtiAnswers[q.dim + i];
+        if (!ans) return;
+        const dimMap = { EI: ['E', 'I'], SN: ['S', 'N'], TF: ['T', 'F'], JP: ['J', 'P'] };
+        const [aKey, bKey] = dimMap[q.dim];
+        if (ans === 'A') scores[aKey]++;
+        else scores[bKey]++;
+      });
+      const type = (scores.E >= scores.I ? 'E' : 'I')
+                 + (scores.S >= scores.N ? 'S' : 'N')
+                 + (scores.T >= scores.F ? 'T' : 'F')
+                 + (scores.J >= scores.P ? 'J' : 'P');
+
+      const info = MBTI_DATA[type];
+      mbtiQuestionArea.style.display = 'none';
+      mbtiResult.style.display = '';
+      mbtiResultType.textContent = type;
+      mbtiResultType.className = 'mbti-result-type ' + type;
+      mbtiResultName.textContent = info.name;
+      mbtiResultDesc.textContent = info.desc;
+      document.getElementById('mbtiModalTitle').textContent = '你的性格类型';
+      document.getElementById('mbtiModalSubtitle').textContent = '';
+      mbtiProgress.innerHTML = MBTI_QUESTIONS.map(() =>
+        '<div class="mbti-progress-dot done"></div>'
+      ).join('');
+
+      // 保存结果到变量
+      selectedMbti = type;
+    }
+
+    // 确认 MBTI 结果
+    btnMbtiConfirm.addEventListener('click', () => {
+      mbtiSelect.value = selectedMbti;
+      mbtiModal.classList.remove('show');
+    });
+
+    // 下拉选择也同步
+    mbtiSelect.addEventListener('change', () => {
+      selectedMbti = mbtiSelect.value;
     });
   </script>
 </body>

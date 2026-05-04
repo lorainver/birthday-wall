@@ -53,7 +53,7 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // 提交祝福（支持带音频）
 app.post('/api/blessing', upload.single('audio'), (req, res) => {
-  const { name, message, color, emoji } = req.body;
+  const { name, message, color, emoji, mbti_type } = req.body;
   if (!message || !message.trim()) {
     return res.status(400).json({ error: '祝福内容不能为空' });
   }
@@ -67,6 +67,7 @@ app.post('/api/blessing', upload.single('audio'), (req, res) => {
     color: color || '#ffffff',
     emoji: emoji || '',
     audio: audioFile,
+    mbti_type: mbti_type || '',
     time: new Date().toISOString(),
   };
   blessings.push(blessing);

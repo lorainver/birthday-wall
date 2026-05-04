@@ -22,6 +22,48 @@
       0% { transform: scale(1); }
       100% { transform: scale(1.3); }
     }
+    /* MBTI 标签样式 */
+    .mbti-tag {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: 10px;
+      font-size: 0.55em; font-weight: 700;
+      margin-right: 6px; cursor: pointer;
+      transition: transform 0.2s; vertical-align: middle;
+      opacity: 0.9;
+    }
+    .mbti-tag:hover { transform: scale(1.15); opacity: 1; }
+    /* NT 分析家紫色 */
+    .mbti-tag.INTJ, .mbti-tag.INTP, .mbti-tag.ENTJ, .mbti-tag.ENTP {
+      background: rgba(155,89,182,0.85); color: #fff;
+    }
+    /* NF 外交家绿色 */
+    .mbti-tag.INFJ, .mbti-tag.INFP, .mbti-tag.ENFJ, .mbti-tag.ENFP {
+      background: rgba(39,174,96,0.85); color: #fff;
+    }
+    /* SJ 守护者蓝色 */
+    .mbti-tag.ISTJ, .mbti-tag.ISFJ, .mbti-tag.ESTJ, .mbti-tag.ESFJ {
+      background: rgba(52,152,219,0.85); color: #fff;
+    }
+    /* SP 探索者黄色 */
+    .mbti-tag.ISTP, .mbti-tag.ISFP, .mbti-tag.ESTP, .mbti-tag.ESFP {
+      background: rgba(243,156,18,0.85); color: #fff;
+    }
+    /* MBTI 详情弹窗 */
+    .mbti-detail-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: none; align-items: center; justify-content: center;
+      z-index: 300; padding: 20px;
+    }
+    .mbti-detail-modal.show { display: flex; }
+    .mbti-detail-content {
+      background: #fff; border-radius: 20px; padding: 24px;
+      max-width: 360px; width: 100%; text-align: center;
+      animation: pop-in 0.3s ease;
+    }
+    .mbti-detail-type { font-size: 2.5rem; font-weight: 800; margin-bottom: 6px; }
+    .mbti-detail-name { font-size: 1.2rem; color: #555; margin-bottom: 10px; }
+    .mbti-detail-desc { font-size: 0.95rem; color: #666; line-height: 1.6; margin-bottom: 16px; }
+    .mbti-detail-close { padding: 10px 24px; border: none; border-radius: 10px; background: #764ba2; color: #fff; cursor: pointer; font-size: 0.95rem; }
   </style>
 </head>
 <body>
@@ -45,6 +87,16 @@
   <div id="qr-float" title="点击查看大图">
     <img id="qr-img" src="" alt="扫码送祝福">
     <span>扫码送祝福</span>
+  </div>
+
+  <!-- MBTI 详情弹窗 -->
+  <div class="mbti-detail-modal" id="mbtiDetailModal">
+    <div class="mbti-detail-content">
+      <div class="mbti-detail-type" id="mbtiDetailType"></div>
+      <div class="mbti-detail-name" id="mbtiDetailName"></div>
+      <div class="mbti-detail-desc" id="mbtiDetailDesc"></div>
+      <button class="mbti-detail-close" id="mbtiDetailClose">知道了</button>
+    </div>
   </div>
 
   <script>
@@ -150,6 +202,17 @@
 
       // 文字内容
       const textSpan = document.createElement('span');
+      // MBTI 标签
+      if (b.mbti_type) {
+        const mbtiTag = document.createElement('span');
+        mbtiTag.className = 'mbti-tag ' + b.mbti_type;
+        mbtiTag.textContent = b.mbti_type;
+        mbtiTag.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showMbtiDetail(b.mbti_type);
+        });
+        el.appendChild(mbtiTag);
+      }
       textSpan.textContent = `${emojiPrefix}${b.name}: ${b.message}`;
       el.appendChild(textSpan);
 
@@ -242,6 +305,54 @@
       const d = new Date(iso);
       return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
     }
+
+    // ========== MBTI 详情 ==========
+    const MBTI_DATA = {
+      INTJ: { name: '建筑师', desc: '富有想象力的战略家，一切皆在计划中。独立果断，对知识有强烈的渴望。' },
+      INTP: { name: '逻辑学家', desc: '不知疲倦的思考者，对知识和理论有无穷的好奇心。追求逻辑自洽，喜欢探索抽象概念。' },
+      ENTJ: { name: '指挥官', desc: '大胆果断的天生领袖，善于制定长远计划并推动团队执行。气场强大，目标明确。' },
+      ENTP: { name: '辩论家', desc: '聪明好奇的思想实验者，热爱智力挑战和头脑风暴。思维敏捷，喜欢打破常规。' },
+      INFJ: { name: '提倡者', desc: '安静而神秘的理想主义者，洞察力强，总是思考如何让世界更美好。' },
+      INFP: { name: '调停者', desc: '诗意善良的利他主义者，内心丰富且充满理想。对世界有独特的理解和深沉的共情。' },
+      ENFJ: { name: '主人公', desc: '富有魅力的激励者，天生的影响力让周围人愿意追随。善于鼓舞人心，推动改变。' },
+      ENFP: { name: '竞选者', desc: '热情洋溢的自由精灵，永远充满创意和可能性。好奇心旺盛，感染力十足。' },
+      ISTJ: { name: '物流师', desc: '务实可靠的秩序守护者，一丝不苟地履行职责。重视传统，值得信赖。' },
+      ISFJ: { name: '守卫者', desc: '温暖体贴的保护者，默默守护身边的人。细心周到，是团队中不可或缺的支柱。' },
+      ESTJ: { name: '总经理', desc: '高效务实的组织者，善于建立秩序和制度。做事有计划，执行力超强。' },
+      ESFJ: { name: '执行者', desc: '热心肠的社交家，总是把别人的需求放在心上。善于营造温馨和谐的团队氛围。' },
+      ISTP: { name: '鉴赏家', desc: '大胆实际的实验家，喜欢动手探索世界。冷静理性，擅长在紧急时刻解决问题。' },
+      ISFP: { name: '探险家', desc: '灵活随性的艺术家，用行动和美感诠释世界。内心丰富但低调，活在当下。' },
+      ESTP: { name: '企业家', desc: '活力满满的机会主义者，享受冒险和即兴发挥。反应极快，永远走在最前沿。' },
+      ESFP: { name: '表演者', desc: '自发的娱乐家，天生自带光环。热情洋溢，走到哪里都是派对的中心。' },
+    };
+
+    const mbtiDetailModal = document.getElementById('mbtiDetailModal');
+    const mbtiDetailType = document.getElementById('mbtiDetailType');
+    const mbtiDetailName = document.getElementById('mbtiDetailName');
+    const mbtiDetailDesc = document.getElementById('mbtiDetailDesc');
+    const mbtiDetailClose = document.getElementById('mbtiDetailClose');
+
+    function showMbtiDetail(type) {
+      const info = MBTI_DATA[type];
+      if (!info) return;
+      mbtiDetailType.textContent = type;
+      mbtiDetailType.style.color = getTypeColor(type);
+      mbtiDetailName.textContent = info.name;
+      mbtiDetailDesc.textContent = info.desc;
+      mbtiDetailModal.classList.add('show');
+    }
+
+    function getTypeColor(type) {
+      if (['INTJ','INTP','ENTJ','ENTP'].includes(type)) return '#9b59b6';
+      if (['INFJ','INFP','ENFJ','ENFP'].includes(type)) return '#27ae60';
+      if (['ISTJ','ISFJ','ESTJ','ESFJ'].includes(type)) return '#3498db';
+      return '#f39c12';
+    }
+
+    mbtiDetailClose.addEventListener('click', () => mbtiDetailModal.classList.remove('show'));
+    mbtiDetailModal.addEventListener('click', (e) => {
+      if (e.target === mbtiDetailModal) mbtiDetailModal.classList.remove('show');
+    });
 
     // ========== 启动 ==========
     loadBlessings();
