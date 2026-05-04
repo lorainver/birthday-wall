@@ -89,6 +89,36 @@ app.get('/api/blessings', (req, res) => {
   res.json(blessings);
 });
 
+// 撤回祝福
+app.delete('/api/blessing/:id', (req, res) => {
+  const { id } = req.params;
+  const idx = blessings.findIndex(b => b.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ error: '祝福不存在' });
+  }
+  
+  // 删除音频文件（如果有）
+  const blessing = blessings[idx];
+  if (blessing.audio) {
+    const audioPath = path.join(__dirname, 'public', blessing.audio);
+    fs.unlink(audioPath, () => {}); // 忽略错误
+  }
+  
+  // 从数组中删除
+  blessings.splice(idx, 1);
+  saveBlessings();
+  
+  // 广播删除消息
+  const payload = JSON.stringify({ type: 'delete_blessing', id });
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) {
+      client.send(payload);
+    }
+  });
+  
+  res.json({ success: true });
+});
+
 // 生成二维码
 app.get('/api/qrcode', async (req, res) => {
   try {

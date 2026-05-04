@@ -71,6 +71,15 @@
     .btn-mbti-confirm { width: 100%; padding: 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; }
     .btn-mbti-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border: none; background: #f0f0f0; border-radius: 50%; cursor: pointer; font-size: 18px; }
 
+    /* 撤回按钮样式 */
+    .withdraw-hint { margin-top: 16px; text-align: center; }
+    .btn-withdraw {
+      background: none; border: none; color: #999; font-size: 0.85rem;
+      cursor: pointer; text-decoration: underline; padding: 4px 8px;
+      transition: color 0.2s;
+    }
+    .btn-withdraw:hover { color: #e74c3c; }
+
     /* 录音按钮样式 */
     .record-field { margin-bottom: 20px; }
     .record-field label { display: block; margin-bottom: 8px; font-size: 14px; color: #666; }
@@ -266,6 +275,9 @@
             <button class="btn-view" id="btnView">查看弹幕墙</button>
             <button class="btn-again" id="btnAgain">再送一条</button>
           </div>
+          <p class="withdraw-hint">
+            <button class="btn-withdraw" id="btnWithdraw">撤回此祝福</button>
+          </p>
         </div>
       </div>
     </div>
@@ -317,6 +329,7 @@
     let selectedColor = '#ffffff';
     let selectedEmoji = '';
     let selectedMbti = '';
+    let lastBlessingId = null; // 最近发送的祝福 ID
 
     // ========== 录音功能 ==========
     const btnRecord = document.getElementById('btnRecord');
@@ -540,6 +553,14 @@
           });
         }
         if (res.ok) {
+          const result = await res.json();
+          // 保存祝福 ID 到 localStorage，支持撤回
+          if (result.blessing && result.blessing.id) {
+            const myBlessings = JSON.parse(localStorage.getItem('myBlessings') || '[]');
+            myBlessings.push(result.blessing.id);
+            localStorage.setItem('myBlessings', JSON.stringify(myBlessings));
+            lastBlessingId = result.blessing.id;
+          }
           successOverlay.classList.add('show');
           startFireworks();  // 触发烟花特效
           startCountdown();
@@ -575,6 +596,42 @@
     btnView.addEventListener('click', () => {
       cancelRedirect();
       window.location.href = '/';
+    });
+
+    // 撤回祝福
+    const btnWithdraw = document.getElementById('btnWithdraw');
+    btnWithdraw.addEventListener('click', async () => {
+      if (!lastBlessingId) {
+        alert('无法找到祝福记录');
+        return;
+      }
+      if (!confirm('确定要撤回这条祝福吗？')) return;
+      
+      btnWithdraw.disabled = true;
+      btnWithdraw.textContent = '撤回中...';
+      try {
+        const res = await fetch('/api/blessing/' + lastBlessingId, { method: 'DELETE' });
+        if (res.ok) {
+          // 从 localStorage 中移除
+          const myBlessings = JSON.parse(localStorage.getItem('myBlessings') || '[]');
+          const idx = myBlessings.indexOf(lastBlessingId);
+          if (idx > -1) myBlessings.splice(idx, 1);
+          localStorage.setItem('myBlessings', JSON.stringify(myBlessings));
+          
+          alert('已撤回');
+          successOverlay.classList.remove('show');
+          messageInput.value = '';
+          countSpan.textContent = '0';
+          lastBlessingId = null;
+        } else {
+          alert('撤回失败，请重试');
+        }
+      } catch (e) {
+        alert('网络错误');
+      } finally {
+        btnWithdraw.disabled = false;
+        btnWithdraw.textContent = '撤回此祝福';
+      }
     });
 
     // 自动跳转倒计时

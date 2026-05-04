@@ -171,6 +171,17 @@
           updateCounter();
           blessingPool.push(msg.data);
           addDanmaku(msg.data);
+        } else if (msg.type === 'delete_blessing') {
+          // 撤回祝福
+          const id = msg.id;
+          // 从池中移除
+          const idx = blessingPool.findIndex(b => b.id === id);
+          if (idx > -1) blessingPool.splice(idx, 1);
+          // 更新计数
+          blessingCount = Math.max(0, blessingCount - 1);
+          updateCounter();
+          // 移除页面上对应的弹幕元素
+          document.querySelectorAll('.danmaku-item[data-id="' + id + '"]').forEach(el => el.remove());
         }
       };
       ws.onclose = () => setTimeout(connectWS, 2000);
@@ -198,6 +209,7 @@
 
       const el = document.createElement('div');
       el.className = 'danmaku-item';
+      el.dataset.id = b.id;
       const emojiPrefix = b.emoji ? b.emoji + ' ' : '';
 
       // 文字内容
