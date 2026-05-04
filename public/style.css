@@ -126,6 +126,7 @@ body {
 }
 
 .danmaku-item {
+  pointer-events: auto;
   position: absolute;
   left: 100%;
   white-space: nowrap;
