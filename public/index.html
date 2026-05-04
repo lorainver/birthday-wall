@@ -247,11 +247,10 @@
         const mbtiTag = document.createElement('span');
         mbtiTag.className = 'mbti-tag ' + b.mbti_type;
         mbtiTag.textContent = MBTI_DATA[b.mbti_type]?.name || b.mbti_type;  // 显示中文名称
-        mbtiTag.addEventListener('click', (e) => {
-          e.stopPropagation();
-          showMbtiDetail(b.mbti_type);
-        });
         el.appendChild(mbtiTag);
+        // 整个弹幕可点击查看 MBTI 详情
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', () => showMbtiDetail(b.mbti_type));
       }
       textSpan.textContent = `${emojiPrefix}${b.name}: ${b.message}`;
       el.appendChild(textSpan);
