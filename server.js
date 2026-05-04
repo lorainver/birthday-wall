@@ -4,6 +4,7 @@ const { WebSocketServer } = require('ws');
 const QRCode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 
 const app = express();
 const server = http.createServer(app);
@@ -12,6 +13,25 @@ const wss = new WebSocketServer({ server });
 const PORT = 3000;
 const HOST = '8.137.117.134';
 const DATA_FILE = path.join(__dirname, 'data', 'blessings.json');
+
+// 配置音频上传目录
+const AUDIO_DIR = path.join(__dirname, 'assets', 'audio');
+if (!fs.existsSync(AUDIO_DIR)) {
+  fs.mkdirSync(AUDIO_DIR, { recursive: true });
+}
+
+// 配置 multer
+const storage = multer.diskStorage({
+  destination: AUDIO_DIR,
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    cb(null, uniqueSuffix + '.webm');
+  }
+});
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 // 加载祝福数据
 let blessings = [];
@@ -31,18 +51,22 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
-// 提交祝福
-app.post('/api/blessing', (req, res) => {
+// 提交祝福（支持带音频）
+app.post('/api/blessing', upload.single('audio'), (req, res) => {
   const { name, message, color, emoji } = req.body;
   if (!message || !message.trim()) {
     return res.status(400).json({ error: '祝福内容不能为空' });
   }
+  
+  const audioFile = req.file ? '/assets/audio/' + req.file.filename : '';
+  
   const blessing = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     name: (name || '匿名').trim(),
     message: message.trim(),
     color: color || '#ffffff',
     emoji: emoji || '',
+    audio: audioFile,
     time: new Date().toISOString(),
   };
   blessings.push(blessing);
@@ -69,8 +93,8 @@ app.get('/api/qrcode', async (req, res) => {
   try {
     const type = req.query.type;
     const url = type === 'display'
-      ? `http://${HOST}:${PORT}`
-      : `http://${HOST}:${PORT}/submit`;
+      ? 'http://' + HOST + ':' + PORT
+      : 'http://' + HOST + ':' + PORT + '/submit';
     const qrDataUrl = await QRCode.toDataURL(url, {
       width: 400,
       margin: 2,
@@ -89,8 +113,8 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🎂 生日祝福墙已启动!`);
-  console.log(`   大屏展示: http://${HOST}:${PORT}`);
-  console.log(`   手机提交: http://${HOST}:${PORT}/submit`);
-  console.log(`   二维码页: http://${HOST}:${PORT}/qrcode`);
+  console.log('🎂 生日祝福墙已启动!');
+  console.log('   大屏展示: http://' + HOST + ':' + PORT);
+  console.log('   手机提交: http://' + HOST + ':' + PORT + '/submit');
+  console.log('   二维码页: http://' + HOST + ':' + PORT + '/qrcode');
 });

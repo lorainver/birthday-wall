@@ -5,56 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>送出生日祝福</title>
   <link rel="stylesheet" href="submit.css">
-  <style>
-    /* 录音按钮样式 */
-    .record-field { margin-bottom: 20px; }
-    .record-field label { display: block; margin-bottom: 8px; font-size: 14px; color: #666; }
-    .record-field label .label-hint { font-size: 12px; color: #aaa; }
-    .record-area { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .btn-record, .btn-upload-audio {
-      width: 56px; height: 56px; border-radius: 50%; border: none;
-      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-      color: #fff; font-size: 24px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 15px rgba(238,90,36,0.3);
-      transition: all 0.2s; user-select: none; -webkit-user-select: none;
-      position: relative;
-    }
-    .btn-upload-audio { background: linear-gradient(135deg, #4d96ff, #6bcb77); }
-    .btn-record:hover, .btn-upload-audio:hover { transform: scale(1.05); }
-    .btn-record:active, .btn-record.recording {
-      transform: scale(1.15);
-      box-shadow: 0 6px 25px rgba(238,90,36,0.5);
-    }
-    .btn-record.recording {
-      animation: pulse-rec 1s infinite;
-    }
-    @keyframes pulse-rec {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(238,90,36,0.4); }
-      50% { box-shadow: 0 0 0 15px rgba(238,90,36,0); }
-    }
-    .record-status {
-      font-size: 14px; color: #888; min-width: 80px;
-    }
-    .record-status .rec-dot {
-      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-      background: #ff4444; margin-right: 6px; vertical-align: middle;
-      animation: blink 1s infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    .preview-area {
-      display: none; align-items: center; gap: 8px;
-      background: #f8f8f8; border-radius: 20px; padding: 6px 14px;
-    }
-    .preview-area.show { display: flex; }
-    .preview-area audio { height: 36px; max-width: 180px; }
-    .btn-del-audio {
-      background: none; border: none; font-size: 18px; cursor: pointer;
-      color: #ccc; padding: 4px; line-height: 1;
-    }
-    .btn-del-audio:hover { color: #ff6b6b; }
-    .record-tip { font-size: 12px; color: #bbb; margin-top: 6px; }
-  </style>
 </head>
 <body>
   <div class="container">
@@ -90,24 +40,6 @@
           <label for="message">祝福语</label>
           <textarea id="message" placeholder="写下你的祝福..." rows="4" maxlength="200" required></textarea>
           <span class="char-count"><span id="count">0</span>/200</span>
-        </div>
-
-        <!-- 语音祝福 -->
-        <div class="field record-field">
-          <label>语音祝福 <span class="label-hint">(可选)</span></label>
-          <div class="record-area">
-            <button type="button" class="btn-record" id="btnRecord" title="按住录音（需要HTTPS）">🎙️</button>
-            <label class="btn-upload-audio" title="上传音频文件">
-              📁
-              <input type="file" id="audioFile" accept="audio/*" style="display:none">
-            </label>
-            <div class="record-status" id="recordStatus">按住录音 或 点击📁上传</div>
-            <div class="preview-area" id="previewArea">
-              <audio id="previewAudio" controls></audio>
-              <button type="button" class="btn-del-audio" id="btnDelAudio" title="删除音频">✕</button>
-            </div>
-          </div>
-          <div class="record-tip" id="recordTip">录音需HTTPS，上传音频文件无需HTTPS</div>
         </div>
 
         <div class="field">
@@ -194,159 +126,6 @@
     let selectedColor = '#ffffff';
     let selectedEmoji = '';
 
-    // ========== 录音功能 ==========
-    const btnRecord = document.getElementById('btnRecord');
-    const recordStatus = document.getElementById('recordStatus');
-    const previewArea = document.getElementById('previewArea');
-    const previewAudio = document.getElementById('previewAudio');
-    const btnDelAudio = document.getElementById('btnDelAudio');
-    const recordTip = document.getElementById('recordTip');
-
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let audioBlob = null;       // 录音完成后的 Blob
-    let isRecording = false;
-    let recTimer = null;
-    let recSeconds = 0;
-    const MAX_REC_SECONDS = 30; // 最长录音时长
-
-    // 检查浏览器是否支持录音
-    function checkRecorderSupport() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
-        return false;
-      }
-      // 检查是否是安全上下文（HTTPS或localhost）
-      if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-        return false;
-      }
-      return true;
-    }
-
-    // ========== 音频文件上传 ==========
-    const audioFileInput = document.getElementById('audioFile');
-    let uploadedAudioFile = null;  // 上传的音频文件
-
-    audioFileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (file.size > 10 * 1024 * 1024) {
-        alert('音频文件不能超过10MB');
-        return;
-      }
-      uploadedAudioFile = file;
-      audioBlob = null;  // 清除录音
-      const url = URL.createObjectURL(file);
-      previewAudio.src = url;
-      previewArea.classList.add('show');
-      recordStatus.textContent = '已上传: ' + file.name.substring(0, 15);
-      recordTip.textContent = '点击 ✕ 可删除重新选择';
-    });
-
-    // 删除音频（录音或上传的文件）
-    function deleteRecording() {
-      audioBlob = null;
-      uploadedAudioFile = null;
-      audioChunks = [];
-      previewAudio.src = '';
-      previewArea.classList.remove('show');
-      recordStatus.textContent = '按住录音 或 点击📁上传';
-      recordTip.textContent = '录音需HTTPS，上传音频文件无需HTTPS';
-      audioFileInput.value = '';  // 清空文件选择
-    }
-
-    // 开始录音
-    async function startRecording() {
-      if (isRecording) return;
-      if (!checkRecorderSupport()) {
-        recordStatus.textContent = '录音需要HTTPS';
-        recordTip.textContent = '请点击📁上传音频文件（无需HTTPS）';
-        return;
-      }
-      uploadedAudioFile = null;  // 清除上传的文件
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // 选择兼容的 mimeType
-        let mimeType = 'audio/webm;codecs=opus';
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = 'audio/webm';
-        }
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = 'audio/mp4';
-        }
-        mediaRecorder = new MediaRecorder(stream, { mimeType });
-        audioChunks = [];
-
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) audioChunks.push(e.data);
-        };
-
-        mediaRecorder.onstop = () => {
-          // 停止所有音轨
-          stream.getTracks().forEach(t => t.stop());
-          audioBlob = new Blob(audioChunks, { type: mimeType.split(';')[0] });
-          uploadedAudioFile = null;  // 清除上传的文件
-          const url = URL.createObjectURL(audioBlob);
-          previewAudio.src = url;
-          previewArea.classList.add('show');
-          recordStatus.textContent = '录音完成 ✓';
-          recordTip.textContent = '点击 ✕ 可删除重录';
-        };
-
-        mediaRecorder.start();
-        isRecording = true;
-        btnRecord.classList.add('recording');
-        recordStatus.innerHTML = '<span class="rec-dot"></span>录音中...';
-        recSeconds = 0;
-        recTimer = setInterval(() => {
-          recSeconds++;
-          recordStatus.innerHTML = '<span class="rec-dot"></span>' + recSeconds + 's';
-          if (recSeconds >= MAX_REC_SECONDS) {
-            stopRecording();
-          }
-        }, 1000);
-      } catch (err) {
-        console.error('录音失败:', err);
-        if (err.name === 'NotAllowedError') {
-          recordStatus.textContent = '请允许麦克风权限';
-        } else {
-          recordStatus.textContent = '录音启动失败';
-        }
-      }
-    }
-
-    // 停止录音
-    function stopRecording() {
-      if (!isRecording || !mediaRecorder) return;
-      isRecording = false;
-      btnRecord.classList.remove('recording');
-      if (recTimer) { clearInterval(recTimer); recTimer = null; }
-      if (mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-      }
-    }
-
-    // 删除录音
-    function deleteRecording() {
-      audioBlob = null;
-      audioChunks = [];
-      previewAudio.src = '';
-      previewArea.classList.remove('show');
-      recordStatus.textContent = '按住录音';
-      recordTip.textContent = '';
-    }
-
-    // 按住录音（支持触摸和鼠标）
-    btnRecord.addEventListener('mousedown', (e) => { e.preventDefault(); startRecording(); });
-    btnRecord.addEventListener('mouseup', (e) => { e.preventDefault(); stopRecording(); });
-    btnRecord.addEventListener('mouseleave', (e) => { if (isRecording) stopRecording(); });
-    btnRecord.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); }, { passive: false });
-    btnRecord.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
-    btnRecord.addEventListener('touchcancel', (e) => { stopRecording(); });
-
-    btnDelAudio.addEventListener('click', deleteRecording);
-
-    // ========== 原有功能 ==========
-
     // 字数统计
     messageInput.addEventListener('input', () => {
       countSpan.textContent = messageInput.value.length;
@@ -379,7 +158,7 @@
       selectedColor = opt.dataset.color;
     });
 
-    // 提交（支持音频上传）
+    // 提交
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
@@ -391,29 +170,11 @@
       submitBtn.disabled = true;
 
       try {
-        let res;
-        if (audioBlob || uploadedAudioFile) {
-          // 有音频，用 FormData
-          const fd = new FormData();
-          fd.append('name', name);
-          fd.append('message', message);
-          fd.append('color', selectedColor);
-          fd.append('emoji', selectedEmoji);
-          const audioFile = uploadedAudioFile || audioBlob;
-          const audioName = uploadedAudioFile ? uploadedAudioFile.name : 'voice.webm';
-          fd.append('audio', audioFile, audioName);
-          res = await fetch('/api/blessing', {
-            method: 'POST',
-            body: fd,
-          });
-        } else {
-          // 无音频，用 JSON
-          res = await fetch('/api/blessing', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, message, color: selectedColor, emoji: selectedEmoji }),
-          });
-        }
+        const res = await fetch('/api/blessing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, message, color: selectedColor, emoji: selectedEmoji }),
+        });
         if (res.ok) {
           successOverlay.classList.add('show');
           startCountdown();
@@ -437,7 +198,6 @@
       messageInput.value = '';
       countSpan.textContent = '0';
       selectedEmoji = '';
-      deleteRecording();
       emojiPicker.querySelectorAll('.emoji-option').forEach(o => o.classList.remove('selected'));
       emojiPicker.querySelector('.emoji-option').classList.add('selected');
       messageInput.focus();
