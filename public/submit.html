@@ -254,7 +254,8 @@
                 <option value="ESFP">ESFP - 表演者</option>
               </optgroup>
             </select>
-            <button class="btn-mbti-test" id="btnMbtiTest">快速测试</button>
+            <button class="btn-mbti-test" id="btnMbtiTestQuick">快速测试 (10题)</button>
+            <button class="btn-mbti-test" id="btnMbtiTestFull" style="background: linear-gradient(135deg, #11998e, #38ef7d); margin-top: 8px;">详细测试 (28题)</button>
           </div>
         </div>
 
@@ -877,7 +878,7 @@
     // ========== MBTI 快速测试 ==========
     const mbtiModal = document.getElementById('mbtiModal');
     const mbtiSelect = document.getElementById('mbtiSelect');
-    const btnMbtiTest = document.getElementById('btnMbtiTest');
+    // MBTI 测试按钮已改为两个：btnMbtiTestQuick 和 btnMbtiTestFull
     const btnMbtiClose = document.getElementById('btnMbtiClose');
     const mbtiProgress = document.getElementById('mbtiProgress');
     const mbtiQuestion = document.getElementById('mbtiQuestion');
@@ -906,6 +907,42 @@
       { q: '对待截止日期？', a: '提前完成，绝不拖延', b: 'DDL 前爆发超强战力', dim: 'JP' },
     ];
 
+    // 详细版 MBTI 测试题（每个维度 7 题，共 28 题）
+    const MBTI_QUESTIONS_FULL = [
+      // E/I 维度 (7题)
+      { q: '周末到了，你更想？', a: '参加热闹的聚会', b: '宅在家享受独处', dim: 'EI' },
+      { q: '和朋友聊天后，你通常？', a: '感觉能量满满', b: '需要独处恢复精力', dim: 'EI' },
+      { q: '遇到新朋友时，你？', a: '主动搭话聊天', b: '等对方先开口', dim: 'EI' },
+      { q: '团队讨论中，你更倾向？', a: '积极发言，引导方向', b: '先听大家说，再谨慎表态', dim: 'EI' },
+      { q: '你喜欢的工作环境？', a: '开放协作的热闹空间', b: '安静独立的私人角落', dim: 'EI' },
+      { q: '度假时你更享受？', a: '和一群人一起探索', b: '一个人安静地发呆看书', dim: 'EI' },
+      { q: '社交活动结束后，你？', a: '意犹未尽想继续', b: '松了口气终于可以休息', dim: 'EI' },
+      // S/N 维度 (7题)
+      { q: '你更关注？', a: '眼前的事实和细节', b: '未来的可能和想象', dim: 'SN' },
+      { q: '学习新东西时，你偏好？', a: '循序渐进，从实际例子开始', b: '先看全貌，自己摸索规律', dim: 'SN' },
+      { q: '评价一个方案，你更看重？', a: '是否切实可行', b: '是否新颖独特', dim: 'SN' },
+      { q: '讲故事时，你会？', a: '按时间线娓娓道来', b: '东一榔头西一棒，天马行空', dim: 'SN' },
+      { q: '选择礼物，你倾向？', a: '实用、对方真正需要的', b: '有创意、意想不到的惊喜', dim: 'SN' },
+      { q: '面对说明书，你？', a: '认真阅读每一步骤', b: '瞟一眼就扔一边，自己捣鼓', dim: 'SN' },
+      { q: '你更欣赏的人是？', a: '脚踏实地把事做好的', b: '天马行空创意无限的', dim: 'SN' },
+      // T/F 维度 (7题)
+      { q: '朋友向你诉苦，你会？', a: '帮Ta分析问题找方案', b: '先共情安慰，让Ta感觉被理解', dim: 'TF' },
+      { q: '做重要决定时，你更依赖？', a: '逻辑分析和客观数据', b: '内心感受和价值观', dim: 'TF' },
+      { q: '团队出现分歧，你会？', a: '摆事实讲道理，找最优解', b: '先照顾大家的情绪和感受', dim: 'TF' },
+      { q: '别人批评你，你？', a: '理性分析批评是否有道理', b: '第一反应是受伤或委屈', dim: 'TF' },
+      { q: '选电影你更爱看？', a: '烧脑悬疑，逻辑推理', b: '温情治愈，打动心灵', dim: 'TF' },
+      { q: '评价一个决定好不好，你更看重？', a: '结果是否高效合理', b: '过程中大家是否开心', dim: 'TF' },
+      { q: '遇到不公平的事，你更可能？', a: '冷静分析来龙去脉再行动', b: '凭直觉和正义感立即反应', dim: 'TF' },
+      // J/P 维度 (7题)
+      { q: '你的旅行方式？', a: '提前做好详细攻略', b: '随性而走，走到哪算哪', dim: 'JP' },
+      { q: '对待截止日期？', a: '提前完成，绝不拖延', b: 'DDL 前爆发超强战力', dim: 'JP' },
+      { q: '你的书桌/房间通常是？', a: '井井有条，东西各归其位', b: '看着乱但我能找到', dim: 'JP' },
+      { q: '计划突然被打乱，你？', a: '有点焦虑，想重新安排', b: '无所谓，顺其自然', dim: 'JP' },
+      { q: '开始一个项目，你？', a: '先列好计划再动手', b: '先干起来，边做边调整', dim: 'JP' },
+      { q: '买东西你更倾向？', a: '列好清单，直奔目标', b: '边逛边看，看到什么买什么', dim: 'JP' },
+      { q: '你觉得理想的周末？', a: '有安排有计划，充实度过', b: '完全自由，想干嘛干嘛', dim: 'JP' },
+    ];
+
     const MBTI_DATA = {
       INTJ: { name: '建筑师', desc: '富有想象力的战略家，一切皆在计划中。独立果断，对知识有强烈的渴望。', color: '#9b59b6' },
       INTP: { name: '逻辑学家', desc: '不知疲倦的思考者，对知识和理论有无穷的好奇心。追求逻辑自洽，喜欢探索抽象概念。', color: '#9b59b6' },
@@ -927,9 +964,22 @@
 
     let mbtiAnswers = {};
     let mbtiCurrentQ = 0;
+    let mbtiQuestions = MBTI_QUESTIONS;  // 当前使用的题目集
+
+    // 快速测试按钮
+    document.getElementById('btnMbtiTestQuick').addEventListener('click', () => {
+      mbtiQuestions = MBTI_QUESTIONS;
+      openMbtiTest('快速 MBTI 测试', '10 道题，1 分钟搞定');
+    });
+
+    // 详细测试按钮
+    document.getElementById('btnMbtiTestFull').addEventListener('click', () => {
+      mbtiQuestions = MBTI_QUESTIONS_FULL;
+      openMbtiTest('详细 MBTI 测试', '28 道题，3-5 分钟');
+    });
 
     // 打开测试弹窗
-    btnMbtiTest.addEventListener('click', () => {
+    function openMbtiTest(title, subtitle) {
       mbtiAnswers = {};
       mbtiCurrentQ = 0;
       mbtiQuestionArea.style.display = '';
@@ -937,12 +987,12 @@
       document.getElementById('mbtiModalTitle').textContent = '快速 MBTI 测试';
       document.getElementById('mbtiModalSubtitle').textContent = '10 道题，1 分钟搞定';
       // 生成进度点
-      mbtiProgress.innerHTML = MBTI_QUESTIONS.map((_, i) =>
+      mbtiProgress.innerHTML = mbtiQuestions.map((_, i) =>
         `<div class="mbti-progress-dot${i === 0 ? ' active' : ''}" id="mbtiDot${i}"></div>`
       ).join('');
       renderQuestion(0);
       mbtiModal.classList.add('show');
-    });
+    }
 
     // 关闭弹窗
     btnMbtiClose.addEventListener('click', () => mbtiModal.classList.remove('show'));
@@ -951,7 +1001,7 @@
     });
 
     function renderQuestion(idx) {
-      const q = MBTI_QUESTIONS[idx];
+      const q = mbtiQuestions[idx];
       mbtiQuestion.textContent = `${idx + 1}. ${q.q}`;
       mbtiOptions.innerHTML = `
         <div class="mbti-option" data-val="A">A. ${q.a}</div>
@@ -969,14 +1019,14 @@
     }
 
     function selectAnswer(idx, val) {
-      const q = MBTI_QUESTIONS[idx];
+      const q = mbtiQuestions[idx];
       mbtiAnswers[q.dim + idx] = val;
       // 更新进度点
       const dot = document.getElementById('mbtiDot' + idx);
       dot.classList.remove('active');
       dot.classList.add('done');
       // 下一题或出结果
-      if (idx < MBTI_QUESTIONS.length - 1) {
+      if (idx < mbtiQuestions.length - 1) {
         const nextDot = document.getElementById('mbtiDot' + (idx + 1));
         nextDot.classList.add('active');
         mbtiCurrentQ = idx + 1;
@@ -989,7 +1039,7 @@
     function showMbtiResult() {
       // 计算各维度
       let scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
-      MBTI_QUESTIONS.forEach((q, i) => {
+      mbtiQuestions.forEach((q, i) => {
         const ans = mbtiAnswers[q.dim + i];
         if (!ans) return;
         const dimMap = { EI: ['E', 'I'], SN: ['S', 'N'], TF: ['T', 'F'], JP: ['J', 'P'] };
@@ -1011,7 +1061,7 @@
       mbtiResultDesc.textContent = info.desc;
       document.getElementById('mbtiModalTitle').textContent = '你的性格类型';
       document.getElementById('mbtiModalSubtitle').textContent = '';
-      mbtiProgress.innerHTML = MBTI_QUESTIONS.map(() =>
+      mbtiProgress.innerHTML = mbtiQuestions.map(() =>
         '<div class="mbti-progress-dot done"></div>'
       ).join('');
 
