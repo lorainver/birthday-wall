@@ -1027,9 +1027,32 @@
       ESFP: { name: '表演者', desc: '自发的娱乐家，天生自带光环。热情洋溢，走到哪里都是派对的中心。', color: '#f39c12' },
     };
 
+// MBTI 用户 ID（存储在 localStorage）
+    function getOrCreateUserId() {
+      let userId = localStorage.getItem('mbti_user_id');
+      if (!userId) {
+        userId = 'user_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('mbti_user_id', userId);
+      }
+      return userId;
+    }
+    const MBTI_USER_ID = getOrCreateUserId();
+
     let mbtiAnswers = {};
     let mbtiCurrentQ = 0;
     let mbtiQuestions = MBTI_QUESTIONS;  // 当前使用的题目集
+
+    // 页面加载时获取之前的测试结果
+    fetch('/api/mbti-result/' + MBTI_USER_ID)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data && data.mbti_type) {
+          selectedMbti = data.mbti_type;
+          mbtiSelect.value = data.mbti_type;
+          console.log('已加载之前的 MBTI 结果', data.mbti_type);
+        }
+      })
+      .catch(() => {}); // 忽略错误
 
     // 快速测试按钮
     document.getElementById('btnMbtiTestQuick').addEventListener('click', () => {
@@ -1132,6 +1155,15 @@
 
       // 保存结果到变量
       selectedMbti = type;
+      
+      // 自动保存到服务器
+      fetch('/api/mbti-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: MBTI_USER_ID, mbti_type: type })
+      }).then(r => r.json()).then(data => {
+        console.log('MBTI 结果已保存', data);
+      }).catch(e => console.error('保存失败', e));
     }
 
     // 确认 MBTI 结果

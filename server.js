@@ -13,6 +13,20 @@ const wss = new WebSocketServer({ server });
 const PORT = 3000;
 const HOST = '8.137.117.134';
 const DATA_FILE = path.join(__dirname, 'data', 'blessings.json');
+const MBTI_FILE = path.join(__dirname, 'data', 'mbti_results.json');
+
+// 加载 MBTI 测试结果
+let mbtiResults = {};
+try {
+  const mbtiData = fs.readFileSync(MBTI_FILE, 'utf-8');
+  mbtiResults = JSON.parse(mbtiData);
+} catch {
+  mbtiResults = {};
+}
+
+function saveMbtiResults() {
+  fs.writeFileSync(MBTI_FILE, JSON.stringify(mbtiResults, null, 2));
+}
 
 // 配置音频上传目录
 const AUDIO_DIR = path.join(__dirname, 'assets', 'audio');
@@ -117,6 +131,26 @@ app.delete('/api/blessing/:id', (req, res) => {
   });
   
   res.json({ success: true });
+});
+
+// 保存 MBTI 测试结果
+app.post('/api/mbti-result', (req, res) => {
+  const { userId, mbti_type } = req.body;
+  if (!userId || !mbti_type) {
+    return res.status(400).json({ error: '参数不完整' });
+  }
+  mbtiResults[userId] = { mbti_type, time: new Date().toISOString() };
+  saveMbtiResults();
+  res.json({ success: true, mbti_type });
+});
+
+// 获取 MBTI 测试结果
+app.get('/api/mbti-result/:userId', (req, res) => {
+  const result = mbtiResults[req.params.userId];
+  if (!result) {
+    return res.status(404).json({ error: '未找到测试结果' });
+  }
+  res.json(result);
 });
 
 // 生成二维码
