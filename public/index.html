@@ -93,7 +93,6 @@
   <div class="mbti-detail-modal" id="mbtiDetailModal">
     <div class="mbti-detail-content">
       <div class="mbti-detail-type" id="mbtiDetailType"></div>
-      <div class="mbti-detail-name" id="mbtiDetailName"></div>
       <div class="mbti-detail-desc" id="mbtiDetailDesc"></div>
       <button class="mbti-detail-close" id="mbtiDetailClose">知道了</button>
     </div>
@@ -218,7 +217,7 @@
       if (b.mbti_type) {
         const mbtiTag = document.createElement('span');
         mbtiTag.className = 'mbti-tag ' + b.mbti_type;
-        mbtiTag.textContent = b.mbti_type;
+        mbtiTag.textContent = MBTI_DATA[b.mbti_type]?.name || b.mbti_type;  // 显示中文名称
         mbtiTag.addEventListener('click', (e) => {
           e.stopPropagation();
           showMbtiDetail(b.mbti_type);
@@ -340,16 +339,14 @@
 
     const mbtiDetailModal = document.getElementById('mbtiDetailModal');
     const mbtiDetailType = document.getElementById('mbtiDetailType');
-    const mbtiDetailName = document.getElementById('mbtiDetailName');
     const mbtiDetailDesc = document.getElementById('mbtiDetailDesc');
     const mbtiDetailClose = document.getElementById('mbtiDetailClose');
 
     function showMbtiDetail(type) {
       const info = MBTI_DATA[type];
       if (!info) return;
-      mbtiDetailType.textContent = type;
+      mbtiDetailType.textContent = type + ' ' + info.name;  // 显示"INTJ 建筑师"格式
       mbtiDetailType.style.color = getTypeColor(type);
-      mbtiDetailName.textContent = info.name;
       mbtiDetailDesc.textContent = info.desc;
       mbtiDetailModal.classList.add('show');
     }
