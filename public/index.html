@@ -39,19 +39,15 @@
       opacity: 0.9;
     }
     .mbti-tag:hover { transform: scale(1.15); opacity: 1; }
-    /* NT 分析家紫色 */
     .mbti-tag.INTJ, .mbti-tag.INTP, .mbti-tag.ENTJ, .mbti-tag.ENTP {
       background: rgba(155,89,182,0.85); color: #fff;
     }
-    /* NF 外交家绿色 */
     .mbti-tag.INFJ, .mbti-tag.INFP, .mbti-tag.ENFJ, .mbti-tag.ENFP {
       background: rgba(39,174,96,0.85); color: #fff;
     }
-    /* SJ 守护者蓝色 */
     .mbti-tag.ISTJ, .mbti-tag.ISFJ, .mbti-tag.ESTJ, .mbti-tag.ESFJ {
       background: rgba(52,152,219,0.85); color: #fff;
     }
-    /* SP 探索者黄色 */
     .mbti-tag.ISTP, .mbti-tag.ISFP, .mbti-tag.ESTP, .mbti-tag.ESFP {
       background: rgba(243,156,18,0.85); color: #fff;
     }
@@ -83,6 +79,26 @@
     }
     .mbti-detail-link:hover { background: rgba(118, 75, 162, 0.2); }
     .mbti-detail-close { padding: 10px 24px; border: none; border-radius: 10px; background: #764ba2; color: #fff; cursor: pointer; font-size: 0.95rem; }
+
+    /* 回应按钮 */
+    .reaction-btn {
+      display: inline-flex; align-items: center; gap: 2px;
+      padding: 2px 10px; border-radius: 14px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+      cursor: pointer; font-size: 0.85em; transition: all 0.2s;
+      user-select: none;
+    }
+    .reaction-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.1); }
+    .reaction-btn.reacted { background: rgba(255,107,107,0.2); border-color: rgba(255,107,107,0.5); }
+
+    /* 统计卡片 */
+    .stat-card {
+      flex: 1; min-width: 80px; text-align: center;
+      background: rgba(255,255,255,0.08); border-radius: 14px;
+      padding: 14px 10px;
+    }
+    .stat-card .stat-num { font-size: 1.6rem; font-weight: 800; }
+    .stat-card .stat-label { font-size: 0.7rem; color: rgba(255,255,255,0.55); margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -106,6 +122,16 @@
       transition: all 0.3s;
     " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
       📋 查看留言板
+    </button>
+    <button id="statsBtn" style="
+      margin-top: 8px; padding: 8px 20px;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      border: none; border-radius: 25px;
+      color: #fff; font-size: 0.9rem; cursor: pointer;
+      box-shadow: 0 4px 15px rgba(245,87,108,0.4);
+      transition: all 0.3s;
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+      📊 数据统计
     </button>
   </header>
 
@@ -140,17 +166,58 @@
       max-width: 600px; width: 100%; max-height: 80vh;
       overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     ">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h2 style="color: #fff; font-size: 1.5rem; margin: 0;">📋 留言板</h2>
         <button id="msgBoardClose" style="
           background: rgba(255,255,255,0.2); border: none;
           color: #fff; font-size: 1.5rem; cursor: pointer;
           padding: 8px 16px; border-radius: 10px;
-        ">×</</button>
+        ">×</button>
+      </div>
+      <div style="margin-bottom: 12px;">
+        <input id="msgSearch" type="text" placeholder="🔍 搜索名字或内容..." style="
+          width: 100%; padding: 10px 16px;
+          background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 12px; color: #fff; font-size: 0.9rem;
+          outline: none; box-sizing: border-box;
+        " />
       </div>
       <div id="msgBoardList" style="
         display: flex; flex-direction: column; gap: 12px;
       "></div>
+    </div>
+  </div>
+
+  <!-- 数据统计弹窗 -->
+  <div id="statsModal" style="
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    display: none; align-items: center; justify-content: center;
+    z-index: 500; padding: 20px;
+  ">
+    <div style="
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-radius: 20px; padding: 24px;
+      max-width: 600px; width: 100%; max-height: 85vh;
+      overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      color: #fff;
+    ">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="font-size: 1.5rem; margin: 0;">📊 数据统计</h2>
+        <button id="statsClose" style="
+          background: rgba(255,255,255,0.2); border: none;
+          color: #fff; font-size: 1.5rem; cursor: pointer;
+          padding: 8px 16px; border-radius: 10px;
+        ">×</button>
+      </div>
+      <div id="statsSummary" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;"></div>
+      <div style="margin-bottom: 20px;">
+        <h3 style="font-size: 1.1rem; margin: 0 0 12px 0;">🧠 MBTI 人格分布</h3>
+        <canvas id="mbtiPieChart" width="560" height="240" style="display: block; margin: 0 auto; max-width: 100%;"></canvas>
+      </div>
+      <div>
+        <h3 style="font-size: 1.1rem; margin: 0 0 12px 0;">⏰ 祝福时间分布</h3>
+        <canvas id="hourBarChart" width="560" height="220" style="display: block; margin: 0 auto; max-width: 100%;"></canvas>
+      </div>
     </div>
   </div>
 
@@ -166,6 +233,8 @@
       loopInterval: 3000,
     };
 
+    const REACTION_EMOJIS = ['❤️', '👍', '😂', '🎉', '🙏'];
+
     // ========== 初始化 ==========
     document.getElementById('title').textContent = CONFIG.title;
     document.getElementById('subtitle').textContent = CONFIG.subtitle;
@@ -173,12 +242,21 @@
       document.getElementById('bg-layer').style.backgroundImage = `url(${CONFIG.bgImage})`;
     }
 
+    // ========== 用户 ID ==========
+    function getOrGenerateUserId() {
+      let uid = localStorage.getItem('birthday_userId');
+      if (!uid) {
+        uid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('birthday_userId', uid);
+      }
+      return uid;
+    }
+
     // ========== 音频播放管理 ==========
-    let currentPlayingAudio = null; // 当前正在播放的音频
-    let currentPlayingBtn = null;   // 当前正在播放的按钮
+    let currentPlayingAudio = null;
+    let currentPlayingBtn = null;
 
     function playAudio(audioUrl, btnElement) {
-      // 如果点击的是正在播放的按钮，则停止
       if (currentPlayingBtn === btnElement && currentPlayingAudio && !currentPlayingAudio.paused) {
         currentPlayingAudio.pause();
         currentPlayingAudio.currentTime = 0;
@@ -187,13 +265,11 @@
         currentPlayingBtn = null;
         return;
       }
-      // 停止之前的播放
       if (currentPlayingAudio) {
         currentPlayingAudio.pause();
         currentPlayingAudio.currentTime = 0;
         if (currentPlayingBtn) currentPlayingBtn.classList.remove('playing');
       }
-      // 播放新的
       const audio = new Audio(audioUrl);
       currentPlayingAudio = audio;
       currentPlayingBtn = btnElement;
@@ -226,17 +302,21 @@
           updateCounter();
           blessingPool.push(msg.data);
           addDanmaku(msg.data);
+          if (msgBoardModal.style.display === 'flex') renderMsgBoard();
         } else if (msg.type === 'delete_blessing') {
-          // 撤回祝福
           const id = msg.id;
-          // 从池中移除
           const idx = blessingPool.findIndex(b => b.id === id);
           if (idx > -1) blessingPool.splice(idx, 1);
-          // 更新计数
           blessingCount = Math.max(0, blessingCount - 1);
           updateCounter();
-          // 移除页面上对应的弹幕元素
           document.querySelectorAll('.danmaku-item[data-id="' + id + '"]').forEach(el => el.remove());
+          if (msgBoardModal.style.display === 'flex') renderMsgBoard();
+        } else if (msg.type === 'update_reaction') {
+          const b = blessingPool.find(b => b.id === msg.id);
+          if (b) {
+            b.reactions = msg.reactions;
+            if (msgBoardModal.style.display === 'flex') renderMsgBoard();
+          }
         }
       };
       ws.onclose = () => setTimeout(connectWS, 2000);
@@ -266,7 +346,6 @@
       el.className = 'danmaku-item';
       el.dataset.id = b.id;
 
-      // 发送时间
       if (b.time) {
         const timeSpan = document.createElement('span');
         timeSpan.className = 'danmaku-time';
@@ -276,22 +355,18 @@
 
       const emojiPrefix = b.emoji ? b.emoji + ' ' : '';
 
-      // 文字内容
       const textSpan = document.createElement('span');
-      // MBTI 标签
       if (b.mbti_type) {
         const mbtiTag = document.createElement('span');
         mbtiTag.className = 'mbti-tag ' + b.mbti_type;
-        mbtiTag.textContent = MBTI_DATA[b.mbti_type]?.name || b.mbti_type;  // 显示中文名称
+        mbtiTag.textContent = MBTI_DATA[b.mbti_type]?.name || b.mbti_type;
         el.appendChild(mbtiTag);
-        // 整个弹幕可点击查看 MBTI 详情
         el.style.cursor = 'pointer';
         el.addEventListener('click', () => showMbtiDetail(b.mbti_type));
       }
       textSpan.textContent = `${emojiPrefix}${b.name}: ${b.message}`;
       el.appendChild(textSpan);
 
-      // 语音按钮
       if (b.audio) {
         const audioBtn = document.createElement('span');
         audioBtn.className = 'audio-btn';
@@ -300,7 +375,6 @@
           e.stopPropagation();
           playAudio(b.audio, audioBtn);
         });
-        // 阻止弹幕动画干扰
         audioBtn.addEventListener('mousedown', (e) => e.stopPropagation());
         audioBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
         el.appendChild(audioBtn);
@@ -327,7 +401,6 @@
       });
     }
 
-    // 循环播放：从池中随机取一条弹幕
     function startLoop() {
       setInterval(() => {
         if (blessingPool.length === 0) return;
@@ -369,8 +442,8 @@
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    // 格式化时间显示
     function formatTime(isoStr) {
+      if (!isoStr) return '';
       const d = new Date(isoStr);
       const now = new Date();
       const h = d.getHours().toString().padStart(2, '0');
@@ -386,12 +459,6 @@
       const div = document.createElement('div');
       div.textContent = s;
       return div.innerHTML;
-    }
-
-    function formatTime(iso) {
-      if (!iso) return '';
-      const d = new Date(iso);
-      return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
     }
 
     // ========== MBTI 详情 ==========
@@ -414,6 +481,13 @@
       ESFP: { name: '表演者', desc: '自发的娱乐家，天生自带光环。热情洋溢，走到哪里都是派对的中心。' },
     };
 
+    const MBTI_TYPE_COLORS = {
+      INTJ: '#9b59b6', INTP: '#8e44ad', ENTJ: '#a569bd', ENTP: '#bb8fce',
+      INFJ: '#27ae60', INFP: '#2ecc71', ENFJ: '#58d68d', ENFP: '#82e0aa',
+      ISTJ: '#3498db', ISFJ: '#5dade2', ESTJ: '#85c1e9', ESFJ: '#aed6f1',
+      ISTP: '#f39c12', ISFP: '#f5b041', ESTP: '#f8c471', ESFP: '#fad7a0',
+    };
+
     const mbtiDetailModal = document.getElementById('mbtiDetailModal');
     const mbtiDetailType = document.getElementById('mbtiDetailType');
     const mbtiDetailDesc = document.getElementById('mbtiDetailDesc');
@@ -423,7 +497,7 @@
     function showMbtiDetail(type) {
       const info = MBTI_DATA[type];
       if (!info) return;
-      mbtiDetailType.textContent = type + ' ' + info.name;  // 显示"INTJ 建筑师"格式
+      mbtiDetailType.textContent = type + ' ' + info.name;
       mbtiDetailType.style.color = getTypeColor(type);
       mbtiDetailDesc.textContent = info.desc;
       mbtiDetailLink.href = 'https://www.16personalities.com/ch/' + type.toLowerCase() + '-人格';
@@ -451,8 +525,13 @@
     const msgBoardModal = document.getElementById('msgBoardModal');
     const msgBoardClose = document.getElementById('msgBoardClose');
     const msgBoardList = document.getElementById('msgBoardList');
+    const msgSearch = document.getElementById('msgSearch');
+
+    let searchQuery = '';
 
     msgBoardBtn.addEventListener('click', () => {
+      searchQuery = '';
+      msgSearch.value = '';
       renderMsgBoard();
       msgBoardModal.style.display = 'flex';
     });
@@ -462,67 +541,60 @@
     });
 
     msgBoardModal.addEventListener('click', (e) => {
-      if (e.target === msgBoardModal) {
-        msgBoardModal.style.display = 'none';
-      }
+      if (e.target === msgBoardModal) msgBoardModal.style.display = 'none';
+    });
+
+    msgSearch.addEventListener('input', () => {
+      searchQuery = msgSearch.value.trim().toLowerCase();
+      renderMsgBoard();
     });
 
     function renderMsgBoard() {
-      // 按时间倒序排列（最新的在最上面）
       const sorted = [...blessingPool].sort((a, b) => 
         new Date(b.time) - new Date(a.time)
       );
 
-      if (sorted.length === 0) {
-        msgBoardList.innerHTML = '<p style="color: #888; text-align: center; padding: 40px;">暂无留言</p>';
+      const filtered = searchQuery
+        ? sorted.filter(b => 
+            (b.name || '').toLowerCase().includes(searchQuery) ||
+            (b.message || '').toLowerCase().includes(searchQuery) ||
+            (MBTI_DATA[b.mbti_type]?.name || b.mbti_type || '').toLowerCase().includes(searchQuery)
+          )
+        : sorted;
+
+      if (filtered.length === 0) {
+        msgBoardList.innerHTML = '<p style="color: #888; text-align: center; padding: 40px;">' + 
+          (searchQuery ? '无匹配留言' : '暂无留言') + '</p>';
         return;
       }
 
-      msgBoardList.innerHTML = sorted.map(b => {
+      msgBoardList.innerHTML = filtered.map(b => {
         const timeStr = b.time ? formatTime(b.time) : '';
         const emojiPrefix = b.emoji ? b.emoji + ' ' : '';
+        const userId = getOrGenerateUserId();
         
-        // MBTI 标签
         let mbtiHtml = '';
         if (b.mbti_type) {
-          const mbtiInfo = MBTI_DATA[b.mbti_type];
           const color = getTypeColor(b.mbti_type);
-          mbtiHtml = `<span style="
-            display: inline-block; padding: 2px 8px; border-radius: 8px;
-            font-size: 0.7em; font-weight: 700; margin-right: 8px;
-            background: ${color}; color: #fff; cursor: pointer;
-          " onclick="showMbtiDetail('${b.mbti_type}')">${mbtiInfo?.name || b.mbti_type}</span>`;
+          mbtiHtml = '<span style="display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.7em; font-weight: 700; margin-right: 8px; background: ' + color + '; color: #fff; cursor: pointer;" onclick="showMbtiDetail(\'' + b.mbti_type + '\')">' + (MBTI_DATA[b.mbti_type]?.name || b.mbti_type) + '</span>';
         }
 
-        // 语音按钮
         let audioHtml = '';
         if (b.audio) {
-          audioHtml = `<span style="
-            display: inline-flex; align-items: center; gap: 4px;
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 12px; padding: 2px 8px; cursor: pointer;
-            font-size: 0.8em; color: #fff; margin-left: 8px;
-          " onclick="playMsgBoardAudio('${b.audio}', this)">🎵 语音</span>`;
+          audioHtml = '<span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 2px 8px; cursor: pointer; font-size: 0.8em; color: #fff; margin-left: 8px;" onclick="playMsgBoardAudio(\'' + b.audio + '\', this)">🎵 语音</span>';
         }
 
-        return `
-          <div style="
-            background: rgba(255,255,255,0.08);
-            border-radius: 12px; padding: 16px;
-            border-left: 4px solid ${b.color || '#764ba2'};
-          ">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-              <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
-                ${mbtiHtml}
-                <span style="font-weight: 600; color: ${b.color || '#fff'};">${escapeHtml(b.name || '匿名')}</span>
-              </div>
-              <span style="font-size: 0.75em; color: rgba(255,255,255,0.5);">${timeStr}</span>
-            </div>
-            <div style="color: rgba(255,255,255,0.9); line-height: 1.6; word-break: break-word;">
-              ${emojiPrefix}${escapeHtml(b.message)}${audioHtml}
-            </div>
-          </div>
-        `;
+        let reactionsHtml = '';
+        REACTION_EMOJIS.forEach(emoji => {
+          const users = b.reactions?.[emoji] || [];
+          const count = users.length;
+          const reacted = users.includes(userId);
+          if (count > 0 || true) { // show all emoji buttons
+            reactionsHtml += '<span class="reaction-btn' + (reacted ? ' reacted' : '') + '" onclick="toggleReaction(\'' + b.id + '\',\'' + emoji + '\')">' + emoji + ' ' + (count || '') + '</span>';
+          }
+        });
+
+        return '<div style="background: rgba(255,255,255,0.07); border-radius: 12px; padding: 14px; border-left: 3px solid ' + (b.color || '#764ba2') + ';"><div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;"><div style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">' + mbtiHtml + '<span style="font-weight: 600; color: ' + (b.color || '#fff') + ';">' + escapeHtml(b.name || '匿名') + '</span></div><span style="font-size: 0.75em; color: rgba(255,255,255,0.45); flex-shrink: 0; margin-left: 8px;">' + timeStr + '</span></div><div style="color: rgba(255,255,255,0.88); line-height: 1.6; word-break: break-word;">' + emojiPrefix + escapeHtml(b.message) + audioHtml + '</div>' + (reactionsHtml ? '<div style="display: flex; gap: 4px; margin-top: 9px; flex-wrap: wrap;">' + reactionsHtml + '</div>' : '') + '</div>';
       }).join('');
     }
 
@@ -555,6 +627,183 @@
         msgBoardCurrentBtn = null;
       };
     };
+
+    // ========== 回应功能 ==========
+    window.toggleReaction = function(blessingId, emoji) {
+      fetch('/api/blessing/' + blessingId + '/react', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji, userId: getOrGenerateUserId() })
+      })
+      .then(r => r.json())
+      .then(data => {
+        const b = blessingPool.find(b => b.id === blessingId);
+        if (b) b.reactions = data.reactions;
+        renderMsgBoard();
+      })
+      .catch(err => console.error('回应失败:', err));
+    };
+
+    // ========== 数据统计 ==========
+    const statsBtn = document.getElementById('statsBtn');
+    const statsModal = document.getElementById('statsModal');
+    const statsClose = document.getElementById('statsClose');
+
+    statsBtn.addEventListener('click', async () => {
+      statsModal.style.display = 'flex';
+      await loadStats();
+    });
+
+    statsClose.addEventListener('click', () => statsModal.style.display = 'none');
+    statsModal.addEventListener('click', (e) => {
+      if (e.target === statsModal) statsModal.style.display = 'none';
+    });
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats');
+        const stats = await res.json();
+        renderStatsSummary(stats);
+        drawMbtiPie(stats.mbtiDist);
+        drawHourBar(stats.hourDist);
+      } catch (e) {
+        console.error('加载统计失败:', e);
+      }
+    }
+
+    function renderStatsSummary(stats) {
+      const el = document.getElementById('statsSummary');
+      el.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-num" style="color: #667eea;">${stats.total}</div>
+          <div class="stat-label">💌 祝福总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color: #f093fb;">${stats.withMbti}</div>
+          <div class="stat-label">🧠 含 MBTI</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color: #43e97b;">${stats.withAudio}</div>
+          <div class="stat-label">🎵 含语音</div>
+        </div>
+      `;
+    }
+
+    function drawMbtiPie(mbtiDist) {
+      const canvas = document.getElementById('mbtiPieChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      const entries = Object.entries(mbtiDist).sort((a, b) => b[1] - a[1]);
+      const total = entries.reduce((s, e) => s + e[1], 0);
+      if (total === 0) {
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('暂无 MBTI 数据', W/2, H/2);
+        return;
+      }
+
+      const cx = W * 0.34, cy = H / 2;
+      const r = Math.min(cx, cy) - 20;
+      let angle = -Math.PI / 2;
+
+      entries.forEach(([type, count]) => {
+        const slice = (count / total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, angle, angle + slice);
+        ctx.closePath();
+        ctx.fillStyle = MBTI_TYPE_COLORS[type] || '#95a5a6';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(26,26,46,0.7)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        angle += slice;
+      });
+
+      // donut hole
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.42, 0, Math.PI * 2);
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 26px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(total, cx, cy - 8);
+      ctx.font = '10px sans-serif';
+      ctx.fillText('总测试', cx, cy + 12);
+
+      // legend
+      const lx = W * 0.62;
+      let ly = 20;
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'left';
+      entries.forEach(([type, count]) => {
+        ctx.fillStyle = MBTI_TYPE_COLORS[type] || '#95a5a6';
+        ctx.fillRect(lx, ly, 14, 14);
+        ctx.fillStyle = '#ccc';
+        ctx.fillText(MBTI_DATA[type]?.name || type, lx + 20, ly + 12);
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillText(count + '', lx + 180, ly + 12);
+        ly += 20;
+      });
+    }
+
+    function drawHourBar(hourDist) {
+      const canvas = document.getElementById('hourBarChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      const vals = Object.values(hourDist);
+      const maxVal = Math.max(...vals, 1);
+      const pad = { top: 15, right: 15, bottom: 28, left: 32 };
+      const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+      const barW = Math.max(4, cw / 24 - 3);
+
+      // grid lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (ch / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(W - pad.right, y);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.round(maxVal * (1 - i / 4)), pad.left - 6, y + 4);
+      }
+
+      for (let h = 0; h < 24; h++) {
+        const val = hourDist[h] || 0;
+        const barH = (val / maxVal) * ch;
+        const x = pad.left + h * (cw / 24) + 1;
+        const y = pad.top + ch - barH;
+
+        const grad = ctx.createLinearGradient(x, y, x, pad.top + ch);
+        grad.addColorStop(0, '#667eea');
+        grad.addColorStop(1, '#764ba2');
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, y, barW, Math.max(barH, 2));
+
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '9px sans-serif';
+        ctx.textAlign = 'center';
+        if (h % 3 === 0) ctx.fillText(h + 'h', x + barW / 2, H - 4);
+        if (val > 0 && maxVal <= 8) {
+          ctx.fillStyle = 'rgba(255,255,255,0.7)';
+          ctx.font = '8px sans-serif';
+          ctx.fillText(val, x + barW / 2, y - 4);
+        }
+      }
+    }
   </script>
 </body>
 </html>

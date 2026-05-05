@@ -52,6 +52,8 @@ let blessings = [];
 try {
   const data = fs.readFileSync(DATA_FILE, 'utf-8');
   blessings = JSON.parse(data);
+  // Ensure reactions field
+  blessings.forEach(b => { if (!b.reactions) b.reactions = {}; });
 } catch {
   blessings = [];
 }
@@ -83,6 +85,7 @@ app.post('/api/blessing', upload.single('audio'), (req, res) => {
     audio: audioFile,
     mbti_type: mbti_type || '',
     time: new Date().toISOString(),
+    reactions: {},
   };
   blessings.push(blessing);
   saveBlessings();
@@ -131,6 +134,52 @@ app.delete('/api/blessing/:id', (req, res) => {
   });
   
   res.json({ success: true });
+});
+
+// 点赞/表情回应
+app.post('/api/blessing/:id/react', (req, res) => {
+  const { id } = req.params;
+  const { emoji, userId } = req.body;
+  if (!emoji || !userId) return res.status(400).json({ error: '参数不完整' });
+
+  const blessing = blessings.find(b => b.id === id);
+  if (!blessing) return res.status(404).json({ error: '祝福不存在' });
+
+  if (!blessing.reactions[emoji]) blessing.reactions[emoji] = [];
+  const idx = blessing.reactions[emoji].indexOf(userId);
+  if (idx > -1) {
+    blessing.reactions[emoji].splice(idx, 1);
+    if (blessing.reactions[emoji].length === 0) delete blessing.reactions[emoji];
+  } else {
+    blessing.reactions[emoji].push(userId);
+  }
+
+  saveBlessings();
+
+  const payload = JSON.stringify({ type: 'update_reaction', id, reactions: blessing.reactions });
+  wss.clients.forEach(c => { if (c.readyState === 1) c.send(payload); });
+
+  res.json({ success: true, reactions: blessing.reactions });
+});
+
+// 统计数据
+app.get('/api/stats', (req, res) => {
+  const mbtiDist = {};
+  const hourDist = {};
+  for (let i = 0; i < 24; i++) hourDist[i] = 0;
+
+  blessings.forEach(b => {
+    if (b.mbti_type) mbtiDist[b.mbti_type] = (mbtiDist[b.mbti_type] || 0) + 1;
+    if (b.time) hourDist[new Date(b.time).getHours()]++;
+  });
+
+  res.json({
+    total: blessings.length,
+    withMbti: blessings.filter(b => b.mbti_type).length,
+    withAudio: blessings.filter(b => b.audio).length,
+    mbtiDist,
+    hourDist,
+  });
 });
 
 // 保存 MBTI 测试结果
