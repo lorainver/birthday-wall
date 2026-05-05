@@ -97,6 +97,16 @@
       <span class="counter-icon">💌</span>
       <span class="counter-text">已收到 <span id="count">0</span> 条祝福</span>
     </div>
+    <button id="msgBoardBtn" style="
+      margin-top: 12px; padding: 10px 24px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none; border-radius: 25px;
+      color: #fff; font-size: 1rem; cursor: pointer;
+      box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+      transition: all 0.3s;
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+      📋 查看留言板
+    </button>
   </header>
 
   <!-- 弹幕层 -->
@@ -115,6 +125,32 @@
       <div class="mbti-detail-desc" id="mbtiDetailDesc"></div>
       <a class="mbti-detail-link" id="mbtiDetailLink" href="#" target="_blank">🔗 了解详情 →</a>
       <button class="mbti-detail-close" id="mbtiDetailClose">知道了</button>
+    </div>
+  </div>
+
+  <!-- 留言板弹窗 -->
+  <div class="msg-board-modal" id="msgBoardModal" style="
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    display: none; align-items: center; justify-content: center;
+    z-index: 400; padding: 20px;
+  ">
+    <div style="
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-radius: 20px; padding: 24px;
+      max-width: 600px; width: 100%; max-height: 80vh;
+      overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    ">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="color: #fff; font-size: 1.5rem; margin: 0;">📋 留言板</h2>
+        <button id="msgBoardClose" style="
+          background: rgba(255,255,255,0.2); border: none;
+          color: #fff; font-size: 1.5rem; cursor: pointer;
+          padding: 8px 16px; border-radius: 10px;
+        ">×</</button>
+      </div>
+      <div id="msgBoardList" style="
+        display: flex; flex-direction: column; gap: 12px;
+      "></div>
     </div>
   </div>
 
@@ -409,6 +445,116 @@
     // ========== 启动 ==========
     loadBlessings();
     loadQRCode();
+
+    // ========== 留言板 ==========
+    const msgBoardBtn = document.getElementById('msgBoardBtn');
+    const msgBoardModal = document.getElementById('msgBoardModal');
+    const msgBoardClose = document.getElementById('msgBoardClose');
+    const msgBoardList = document.getElementById('msgBoardList');
+
+    msgBoardBtn.addEventListener('click', () => {
+      renderMsgBoard();
+      msgBoardModal.style.display = 'flex';
+    });
+
+    msgBoardClose.addEventListener('click', () => {
+      msgBoardModal.style.display = 'none';
+    });
+
+    msgBoardModal.addEventListener('click', (e) => {
+      if (e.target === msgBoardModal) {
+        msgBoardModal.style.display = 'none';
+      }
+    });
+
+    function renderMsgBoard() {
+      // 按时间倒序排列（最新的在最上面）
+      const sorted = [...blessingPool].sort((a, b) => 
+        new Date(b.time) - new Date(a.time)
+      );
+
+      if (sorted.length === 0) {
+        msgBoardList.innerHTML = '<p style="color: #888; text-align: center; padding: 40px;">暂无留言</p>';
+        return;
+      }
+
+      msgBoardList.innerHTML = sorted.map(b => {
+        const timeStr = b.time ? formatTime(b.time) : '';
+        const emojiPrefix = b.emoji ? b.emoji + ' ' : '';
+        
+        // MBTI 标签
+        let mbtiHtml = '';
+        if (b.mbti_type) {
+          const mbtiInfo = MBTI_DATA[b.mbti_type];
+          const color = getTypeColor(b.mbti_type);
+          mbtiHtml = `<span style="
+            display: inline-block; padding: 2px 8px; border-radius: 8px;
+            font-size: 0.7em; font-weight: 700; margin-right: 8px;
+            background: ${color}; color: #fff; cursor: pointer;
+          " onclick="showMbtiDetail('${b.mbti_type}')">${mbtiInfo?.name || b.mbti_type}</span>`;
+        }
+
+        // 语音按钮
+        let audioHtml = '';
+        if (b.audio) {
+          audioHtml = `<span style="
+            display: inline-flex; align-items: center; gap: 4px;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px; padding: 2px 8px; cursor: pointer;
+            font-size: 0.8em; color: #fff; margin-left: 8px;
+          " onclick="playMsgBoardAudio('${b.audio}', this)">🎵 语音</span>`;
+        }
+
+        return `
+          <div style="
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 16px;
+            border-left: 4px solid ${b.color || '#764ba2'};
+          ">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                ${mbtiHtml}
+                <span style="font-weight: 600; color: ${b.color || '#fff'};">${escapeHtml(b.name || '匿名')}</span>
+              </div>
+              <span style="font-size: 0.75em; color: rgba(255,255,255,0.5);">${timeStr}</span>
+            </div>
+            <div style="color: rgba(255,255,255,0.9); line-height: 1.6; word-break: break-word;">
+              ${emojiPrefix}${escapeHtml(b.message)}${audioHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 留言板音频播放
+    let msgBoardCurrentAudio = null;
+    let msgBoardCurrentBtn = null;
+
+    window.playMsgBoardAudio = function(url, btn) {
+      if (msgBoardCurrentBtn === btn && msgBoardCurrentAudio && !msgBoardCurrentAudio.paused) {
+        msgBoardCurrentAudio.pause();
+        msgBoardCurrentAudio.currentTime = 0;
+        btn.style.background = 'rgba(255,255,255,0.1)';
+        msgBoardCurrentAudio = null;
+        msgBoardCurrentBtn = null;
+        return;
+      }
+      if (msgBoardCurrentAudio) {
+        msgBoardCurrentAudio.pause();
+        msgBoardCurrentAudio.currentTime = 0;
+        if (msgBoardCurrentBtn) msgBoardCurrentBtn.style.background = 'rgba(255,255,255,0.1)';
+      }
+      const audio = new Audio(url);
+      msgBoardCurrentAudio = audio;
+      msgBoardCurrentBtn = btn;
+      btn.style.background = 'rgba(255,107,107,0.3)';
+      audio.play().catch(e => console.error('播放失败', e));
+      audio.onended = () => {
+        btn.style.background = 'rgba(255,255,255,0.1)';
+        msgBoardCurrentAudio = null;
+        msgBoardCurrentBtn = null;
+      };
+    };
   </script>
 </body>
 </html>
